@@ -1,0 +1,117 @@
+<!doctype html>
+<html>
+        <head>
+            <title>Socket.IO Example</title>
+            <script src="https://cdn.plot.ly/plotly-2.1.0.min.js"></script>
+            <script src='/socket.io/socket.io.js'></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/0.9.90/jsrender.min.js"></script>
+        </head>
+        <body>
+            <div class="navbar"><span>Real-Time Chart with Plotly.js</span></div>
+
+                <!-- <script id="renderTempData" type="text/x-jsrender">
+                    <div class="temp">
+                        {{:temp}} {{:state}}
+                    </div>
+                </script> -->
+
+                <div class="wrapper">
+                    <div id="temp-ind"></div>
+                    <div id="temp-chart"></div>
+                    <div id="field-chart"></div>
+                    <script>
+                        var cnt = 0;
+                        var saveCnt = 0;
+                        // var layout = {width: 600, height: 400 };
+
+                        // update Plotly graph
+                        function updateGraph(temp_data, field_data) {
+                            // var data = [
+                            // {
+                            //     domain: { x: [0, 1], y: [0, 1] },
+                            //     value: temp_data,
+                            //     title: { text: "Speed" },
+                            //     type: "indicator",
+                            //     mode: "gauge+number",
+                            //     delta: { reference: 400, valueformat: "04d"},
+                            //     gauge: { axis: { range: [null, 500] }}
+                            // }
+                            // ];
+                            
+                            // Plotly.newPlot('temp-ind', data, layout);
+
+                            if(cnt === 0) {
+                                Plotly.newPlot('temp-chart',[{
+                                    y:[temp_data],
+                                    type:'line'
+                                }]);
+                                Plotly.newPlot('field-chart',[{
+                                    y:[field_data],
+                                    type:'line'
+                                }]);       
+                            }
+                            Plotly.extendTraces('temp-chart', {y:[[temp_data]]}, [0]);
+                            Plotly.extendTraces('field-chart', {y:[[field_data]]}, [0]);
+                            cnt++;
+                            if(cnt > 500) {
+                                Plotly.relayout('temp-chart',{
+                                    xaxis: {
+                                        range: [cnt-500,cnt]
+                                    }
+                                });
+                                Plotly.relayout('field-chart',{
+                                    xaxis: {
+                                        range: [cnt-500,cnt]
+                                    }
+                                });
+                            };
+                        };
+
+                        // store data into mongoDB
+                        var dataDict = {
+                            "temp": [],
+                            "field": [],
+                            // "Vx": [],
+                            // "Vy": [],
+                            // "freq": [],
+                            // "theta": [],
+                        };
+
+                        function appendData(socket, data) {
+                            for (var key of Object.keys(dataDict)) {
+                                dataDict[key].push(data[key])
+                            }
+                            if (saveCnt === 500) {
+                                socket.emit('save', dataDict);
+                                console.log("data emitted!");
+                                dataDict = {
+                                    "temp": [],
+                                    "field": [],
+                                    // "Vx": [],
+                                    // "Vy": [],
+                                    // "freq": [],
+                                    // "theta": [],
+                                };
+                                saveCnt = 0;
+                            }
+                            saveCnt++;
+                        };
+        
+                        var socket = io();
+                        
+                        // Create jsrender template to render json data
+                        // var tmpl = $.templates("#renderTempData");
+                        
+                        // On packet recieved update graph
+                        socket.on('data', function (data) {
+                            // console.log(data);
+                            updateGraph(data.temp, data.field);
+                            appendData(socket, data);
+                            // $('#data').html(tmpl.render(data))
+                        });
+
+                    </script>
+                </div>
+        </body>
+</html>
