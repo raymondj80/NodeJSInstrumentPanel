@@ -5,8 +5,8 @@ const mongoose = require('mongoose');
 const data = require('./data.js');
 const io = require('socket.io')(http);
 const StreamData = require('./models/streamData');
-// const mongoose = require('mongoose');
 
+// import Vue from 'vue';
 // Connect to mongoDB
 const dbURI = 'mongodb+srv://mgppmsad:myppms214@njscontrolpanel.jkayg.mongodb.net/PPMS-DATA?retryWrites=true&w=majority';
 
@@ -45,10 +45,10 @@ app.get('/', function(req, res){
 });
  
 // retrieve temp data on set interval
-setInterval(function() {
-    getData();
-    // send it to all connected clients
-    io.emit('data', myData);
-    // console.log('Last updated: ' + new Date());
-}, 1000);
+// setInterval(function() {
+//     getData();
+//     // send it to all connected clients
+//     io.emit('data', myData);
+//     // console.log('Last updated: ' + new Date());
+// }, 1000);
 

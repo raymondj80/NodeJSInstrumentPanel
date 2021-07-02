@@ -62,29 +62,27 @@ class QDInstrument:
             "field_state": states.fieldStates[str(arg3.value)]
             })
 
-adapter = VXI11Adapter("TCPIP::140.247.189.23::inst0::INSTR")
+adapter = VXI11Adapter("TCPIP::140.247.189.96::inst0::INSTR")
 
 my_QD = QDInstrument('DYNACOOL')
 
-
 #Ugly fix; add instrument selection functionality later
-
-# try:
-#     LI1 = SR860(adapter)
-#     lockin_json = {
-#         "Vx": LI1.x,
-#         "Vy": LI1.y,
-#         "freq": LI1.frequency,
-#         "theta": LI1.theta
-#     }
-# except:
-#     lockin_json = {
-#         "Vx": None,
-#         "Vy": None,
-#         "freq": None,
-#         "theta": None
-#     }
+try:
+    LI1 = SR860(adapter)
+    lockin_json = {
+        "Vx": LI1.x,
+        "Vy": LI1.y,
+        "freq": LI1.frequency,
+        "theta": LI1.theta
+    }
+except:
+    lockin_json = {
+        "Vx": None,
+        "Vy": None,
+        "freq": None,
+        "theta": None
+    }
 
 myjson = json.loads(my_QD.get_data())
-# myjson.update(lockin_json)
+myjson.update(lockin_json)
 print(json.dumps(myjson))
