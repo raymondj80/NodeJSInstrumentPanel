@@ -6,6 +6,8 @@ import json
 #SR860 Lockin imports
 from pymeasure.adapters import VXI11Adapter
 from pymeasure.instruments.srs import SR860
+from pymeasure.instruments.keithley import Keithley6221
+
 
 if sys.platform == 'win32':
     try:
@@ -62,27 +64,49 @@ class QDInstrument:
             "field_state": states.fieldStates[str(arg3.value)]
             })
 
-adapter = VXI11Adapter("TCPIP::140.247.189.96::inst0::INSTR")
+adapter1 = VXI11Adapter("TCPIP::140.247.189.23::inst0::INSTR")
+adapter2 = VXI11Adapter("TCPIP::140.247.189.96::inst0::INSTR")
+
+#code for keithley current source, ready to test whenever! -SD, 7/2/21
+#adapter_keithley = VXI11Adapter("TCPIP::140.247.189.102::inst0::INSTR")
+#keithley1 = Keithley6221(adapter_keithley)
 
 my_QD = QDInstrument('DYNACOOL')
 
 #Ugly fix; add instrument selection functionality later
 try:
-    LI1 = SR860(adapter)
-    lockin_json = {
-        "Vx": LI1.x,
-        "Vy": LI1.y,
-        "freq": LI1.frequency,
-        "theta": LI1.theta
+    LI1 = SR860(adapter1)
+    lockin_json1 = {
+        "Vx1": LI1.x,
+        "Vy1": LI1.y,
+        "freq1": LI1.frequency,
+        "theta1": LI1.theta
     }
 except:
-    lockin_json = {
-        "Vx": None,
-        "Vy": None,
-        "freq": None,
-        "theta": None
+    lockin_json1 = {
+        "Vx1": None,
+        "Vy1": None,
+        "freq1": None,
+        "theta1": None
+    }
+
+try:
+    LI2 = SR860(adapter2)
+    lockin_json2 = {
+        "Vx2": LI2.x,
+        "Vy2": LI2.y,
+        "freq2": LI2.frequency,
+        "theta2": LI2.theta
+    }
+except:
+    lockin_json2 = {
+        "Vx2": None,
+        "Vy2": None,
+        "freq2": None,
+        "theta2": None
     }
 
 myjson = json.loads(my_QD.get_data())
-myjson.update(lockin_json)
+myjson.update(lockin_json1)
+myjson.update(lockin_json2)
 print(json.dumps(myjson))

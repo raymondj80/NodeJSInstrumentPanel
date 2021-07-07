@@ -10,22 +10,35 @@ const streamSchema = new Schema({
         type: [Number],
         required: false
     },
-    Vx: {
+    Vx1: {
         type: [Number],
         required: false
     },
-    Vy: {
+    Vy1: {
         type: [Number],
         required: false
     },
-    freq: {
+    freq1: {
         type: [Number],
         required: false
     },
-    theta: {
+    Vx2: {
         type: [Number],
         required: false
     },
+    Vy2: {
+        type: [Number],
+        required: false
+    },
+    freq2: {
+        type: [Number],
+        required: false
+    },
+    theta2: {
+        type: [Number],
+        required: false
+    }, 
+
 }, {timestamps: true});
 
 const StreamData = mongoose.model('STREAM-DATA', streamSchema);
