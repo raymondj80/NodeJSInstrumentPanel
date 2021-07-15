@@ -81,6 +81,7 @@
                         saveCnt++;
                         counts = counts - 1;
                         appendData(socket, data);
+                        updateHeader(data);
                     }
                     else if (counts == 0) {
                         counts = counts - 1;

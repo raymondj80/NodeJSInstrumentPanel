@@ -40,10 +40,6 @@
                             <b-nav-item href="/graphs">Graphs</b-nav-item>
                             <b-nav-item href="/gd">Google Drive</b-nav-item>
                         </b-navbar-nav>
-                        <!-- <b-nav-item-dropdown text="User" right>
-                            <b-dropdown-item href="#">Account</b-dropdown-item>
-                            <b-dropdown-item href="#">Settings</b-dropdown-item>
-                        </b-nav-item-dropdown> -->
                     </b-navbar-nav>
                 </b-navbar>
 
@@ -52,14 +48,40 @@
                     <b-jumbotron header="GoogleDrive" lead="Save data into .csv or .dat file format">
                         <hr class="my-4">
                     </b-jumbotron>
+
+                    <div>
+                        <b-form>
+                            <b-input-group class="record-inputs">
+                                <b-form-input
+                                    id="record-filename"
+                                    v-model="filename"
+                                    type="text"
+                                    placeholder="filename"
+                                    required
+                                ></b-form-input>
+                                <b-input-group-append>
+                                <b-button @click="onExport" variant="outline-primary">Export</b-button>
+                            </b-input-group>
+                        </b-form>
+                    </div>
+
                 </b-container>
                     
 
+            </div>
                 <script>
+                    var socket = io();
                     window.app = new Vue({
                     el: '#app',
                     data: {
-                        name: ''
+                        name: '',
+                        filename: '',
+                    },
+                    methods: {
+                      onExport(event) {
+                          event.preventDefault()
+                          socket.emit('export', this.filename)
+                      }  
                     },
                     computed: {
                         showAlert() {
