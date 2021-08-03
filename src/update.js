@@ -1,15 +1,5 @@
 var saveCnt = 0;
 var dataDict = {
-    // "temp": [],
-    // "field": [],
-    // "Vx1": [],
-    // "Vy1": [],
-    // "freq1": [],
-    // "theta1": [],
-    // "Vx2": [],
-    // "Vy2": [],
-    // "freq2": [],
-    // "theta2": [],
     "data": [],
     "id": '',
 };
@@ -25,16 +15,17 @@ function appendData(socket, data) {
 function saveDict(action, id) {
     if (action === 'new') {
         socket.emit('new', dataDict);
+        console.log("data emitted!");
     }
     else if (action === 'append') {
         dataDict['id'] = id;
-        // console.log(dataDict);
         socket.emit('append', dataDict);  
+        console.log("data emitted!");
     }
     else {
         socket.emit('');
     }
-    console.log("data emitted!");
+    
 }
 
 function clearDict() {

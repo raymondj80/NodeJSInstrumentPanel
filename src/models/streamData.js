@@ -16,7 +16,6 @@ const streamSchema = new Schema({
             freq2: Number,
             theta2: Number,
         }],
-    // data: [Map],
 }, {timestamps: true});
 
 const StreamData = mongoose.model('STREAM-DATA', streamSchema);
