@@ -30,15 +30,17 @@
             <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/0.9.90/jsrender.min.js"></script>
             <script type="text/javascript" src="/update.js"></script>
             <script type="text/javascript" src="https://apis.google.com/js/api.js?onload=loadPicker"></script>
+            <script type="text/javascript" src="https://apis.google.com/js/api.js"></script>
             <script type="text/javascript">
                 var developerKey = 'AIzaSyDWpKfzB9fTS16iTBg0FqT7_kRr0fq0rRI';
                 var clientId = '869904555675-kpje9fhnaoncru44ekg1ucgnvsa5cjlm.apps.googleusercontent.com';
                 var appId = '869904555675';
                 var scope = [
-                    'https://www.googleapis.com/auth/drive.file'
+                    'https://www.googleapis.com/auth/drive'
                 ];
                 var pickerApiLoaded = false;
                 var oauthToken;
+                var socket = io();
                 
                 // Use the Google API Loader script to load the google.picker script.
                 function loadPicker() {
@@ -64,6 +66,7 @@
                 function handleAuthResult(authResult) {
                     if (authResult && !authResult.error) {
                         oauthToken = authResult.access_token;
+                        socket.emit('token', authResult);
                         createPicker();
                     }
                 }
@@ -91,12 +94,39 @@
                 // A simple callback implementation.
                 function pickerCallback(data) {
                     if (data.action == google.picker.Action.PICKED) {
-                        var fileId = data.docs[0].id;
-                        alert('The user selected: ' + fileId);
+                        window.app.folderid = data.docs[0].id;
+                        socket.emit('export', [window.app.filename, window.app.folderid])
+                        console.log('exported')
                     }
                 }
 
+                // function uploadFile(filename, folderid, readstream) {
+                //     const fileMetadata = {
+                //         name: `${filename}.csv`,
+                //         parents: [folderid]
+                //     };
+                //     const media = {
+                //         mimeType: 'text/csv',
+                //         body: readstream
+                //     };
+                //     gapi.client.drive.files.create({
+                //         resource: fileMetadata,
+                //         media: media,
+                //         fields: 'id'
+                //     }, function (err, file) {
+                //         if (err) {
+                //             console.error(err);
+                //         } else {
+                //             window.app.folderid = file.id;
+                //             console.log('File Id: ', file.id);
+                //         }
+                //     });
+                // }
             </script>
+            <!-- <script async defer src="https://apis.google.com/js/api.js"
+                onload="this.onload=function(){};handleClientLoad()"
+                onreadystatechange="if (this.readyState === 'complete') this.onload()">
+            </script> -->
         </head>
 
         <body>
@@ -139,7 +169,7 @@
 
             </div>
                 <script>
-                    var socket = io();
+                    
                 </script>
                 <script>
                     window.app = new Vue({
@@ -147,12 +177,12 @@
                     data: {
                         name: '',
                         filename: '',
+                        folderid: '',
                     },
                     methods: {
                       onExport(event) {
                           event.preventDefault();
                           loadPicker();
-                        //   socket.emit('export', this.filename)
                       }  
                     },
                     computed: {
