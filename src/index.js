@@ -1,19 +1,13 @@
 // imports 
 const fs = require('fs');
-const url = require('url');
-const opn = require('open');
-const destroyer = require('server-destroy');
 const app = require('express')();
 const http = require('http').Server(app);
-const myhttp = require('http');
 const mongoose = require('mongoose');
 const data = require('./data.js');
 const io = require('socket.io')(http);
 const StreamData = require('./models/streamData');
 const {Parser} = require('json2csv');
 const {google} = require('googleapis');
-const readline = require('readline');
-
 
 // Connect to mongoDB
 const dbURI = 'mongodb+srv://mgppmsad:myppms214@njscontrolpanel.jkayg.mongodb.net/PPMS-DATA?retryWrites=true&w=majority';
@@ -22,7 +16,51 @@ const dbURI = 'mongodb+srv://mgppmsad:myppms214@njscontrolpanel.jkayg.mongodb.ne
 // The file token.json stores the user's access and refresh tokens, and is
 // created automatically when the authorization flow completes for the first
 // time.
-const TOKEN_PATH = 'token.json';
+const TOKEN_PATH = 'secrets/token.json';
+const CRED_PATH = 'secrets/credentials.json'
+
+// authenticate
+function authenticate(credentialsPath, tokenPath, callback, filename, folderid) {
+    fs.readFile(credentialsPath, (err, content) => {
+      if (err) return console.log('Error loading client secret file:', err);
+      const {client_secret, client_id, redirect_uris} = JSON.parse(content).web;
+      const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+
+      // Check if token has been created
+      fs.readFile(tokenPath, (err, token) => {
+        if (err) return getAccessToken(oAuth2Client);
+          oAuth2Client.setCredentials(JSON.parse(token));
+          callback(oAuth2Client, filename, folderid);
+      });
+      
+    });  
+}
+
+// Google Drive file upload 
+function uploadFile(authClient, filename, folderid) {
+  const mydrive = google.drive({version: 'v3', auth: authClient});
+  const fileMetadata = {
+    'name': filename,
+    parents: [folderid]
+  };
+  const media = {
+    mimeType: 'text/csv',
+    body: fs.createReadStream(`data/${filename}.csv`)
+  };
+  mydrive.files.create({
+    resource: fileMetadata,
+    media: media,
+    fields: 'id'
+  }, (err, file) => {
+    if (err) {
+      // Handle error
+      console.error(err);
+    } else {
+      console.log('File uploaded onto Google Drive');
+    }
+  });
+}
+
 
 mongoose.connect(dbURI, {useNewUrlParser: true, useUnifiedTopology: true })
     .then((result) => http.listen(3000, function(){
@@ -83,57 +121,14 @@ io.on('connection', function(socket){
             const csv = json2csvParser.parse(myRes);
             fs.writeFile(`data/${filename}.csv`, csv, (err) => {
                 if (err)
-                    console.log(err);
+                  console.log(err);
                 else {
-                    fs.readFile('credentials.json', (err, content) => {
-                      if (err) return console.log('Error loading client secret file:', err);
-                      // Authorize a client with credentials, then call the Google Drive API.
-                      const {client_secret, client_id, redirect_uris} = JSON.parse(content).web;
-                      const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
-                      fs.readFile(TOKEN_PATH, (err, token) => {
-                        if (err) return getAccessToken(oAuth2Client);
-                        console.log(JSON.parse(token))
-                        oAuth2Client.setCredentials(JSON.parse(token));
-                        const mydrive = google.drive({version: 'v3', auth: oAuth2Client});
-                        const fileMetadata = {
-                          'name': filename,
-                          parents: [folderid]
-                        };
-                        const media = {
-                          mimeType: 'text/csv',
-                          body: fs.createReadStream(`data/${filename}.csv`)
-                        };
-                        mydrive.files.create({
-                          resource: fileMetadata,
-                          media: media,
-                          fields: 'id'
-                        }, (err, file) => {
-                          if (err) {
-                            // Handle error
-                            console.error(err);
-                          } else {
-                            console.log('SUCCESS!!');
-                          }
-                        });
-                      });
-
-                    });
+                  authenticate(CRED_PATH, TOKEN_PATH, uploadFile, filename, folderid);
                 }
             });
         });
     })
 
-});
-
-app.get('/index', function(req, res){
-    // Load client secrets from a local file.
-    fs.readFile('credentials.json', (err, content) => {
-      if (err) return console.log('Error loading client secret file:', err);
-      // Authorize a client with credentials, then call the Google Drive API.
-      authorize(JSON.parse(content), listFiles);
-    });
-
-    res.sendFile(__dirname + '/views/index.html');
 });
 
 app.get('/home', function(req, res){
