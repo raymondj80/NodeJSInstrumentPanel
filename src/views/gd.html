@@ -1,170 +1,208 @@
 <!DOCTYPE html>
 <html lang="en">
-        <head>
-            <!-- Required meta tags -->
-            <meta charset="utf-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-            <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 
-            <!-- Required Stylesheets -->
-            <link
-            type="text/css"
-            rel="stylesheet"
-            href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css"
-            />
-            <link
-            type="text/css"
-            rel="stylesheet"
-            href="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css"
-            />
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 
-            <!-- Load polyfills to support older browsers -->
-            <script src="https://polyfill.io/v3/polyfill.min.js?features=es2015%2CIntersectionObserver"></script>
+    <!-- Required Stylesheets -->
+    <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css" />
+    <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css" />
 
-            <!-- Required scripts -->
-            <script src="https://unpkg.com/vue@latest/dist/vue.js"></script>
-            <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
-            <script src="https://cdn.plot.ly/plotly-2.1.0.min.js"></script>
-            <script src='/socket.io/socket.io.js'></script>
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/0.9.90/jsrender.min.js"></script>
-            <script type="text/javascript" src="/update.js"></script>
-            <script type="text/javascript" src="https://apis.google.com/js/api.js?onload=loadPicker"></script>
-            <script type="text/javascript" src="https://apis.google.com/js/api.js"></script>
-            <script type="text/javascript">
-            
-                var developerKey = 'AIzaSyDWpKfzB9fTS16iTBg0FqT7_kRr0fq0rRI';
-                var clientId = '869904555675-kpje9fhnaoncru44ekg1ucgnvsa5cjlm.apps.googleusercontent.com';
-                var appId = '869904555675';
-                var scope = [
-                    'https://www.googleapis.com/auth/drive'
-                ];
-                var pickerApiLoaded = false;
-                var oauthToken;
-                var socket = io();
-                
-                // Use the Google API Loader script to load the google.picker script.
-                function loadPicker() {
-                gapi.load('auth', {'callback': onAuthApiLoad});
-                gapi.load('picker', {'callback': onPickerApiLoad});
-                }
+    <!-- Load polyfills to support older browsers -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es2015%2CIntersectionObserver"></script>
 
-                function onAuthApiLoad() {
-                window.gapi.auth.authorize(
-                    {
-                        'client_id': clientId,
-                        'scope': scope,
-                        'immediate': false
-                    },
-                    handleAuthResult);
-                }
+    <!-- Required scripts -->
+    <script src="https://unpkg.com/vue@latest/dist/vue.js"></script>
+    <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
+    <script src='/socket.io/socket.io.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/0.9.90/jsrender.min.js"></script>
+    <script type="text/javascript" src="/update.js"></script>
+    <script type="text/javascript" src="https://apis.google.com/js/api.js?onload=loadPicker"></script>
+    <script type="text/javascript">
 
-                function onPickerApiLoad() {
-                pickerApiLoaded = true;
+        var developerKey = 'AIzaSyDWpKfzB9fTS16iTBg0FqT7_kRr0fq0rRI';
+        var clientId = '869904555675-kpje9fhnaoncru44ekg1ucgnvsa5cjlm.apps.googleusercontent.com';
+        var appId = '869904555675';
+        var scope = [
+            'https://www.googleapis.com/auth/drive'
+        ];
+        var pickerApiLoaded = false;
+        var oauthToken;
+        var socket = io();
+
+        // Use the Google API Loader script to load the google.picker script.
+        function loadPicker() {
+            gapi.load('auth', { 'callback': onAuthApiLoad });
+            gapi.load('picker', { 'callback': onPickerApiLoad });
+        }
+
+        function onAuthApiLoad() {
+            window.gapi.auth.authorize(
+                {
+                    'client_id': clientId,
+                    'scope': scope,
+                    'immediate': false
+                },
+                handleAuthResult);
+        }
+
+        function onPickerApiLoad() {
+            pickerApiLoaded = true;
+            createPicker();
+        }
+
+        function handleAuthResult(authResult) {
+            if (authResult && !authResult.error) {
+                oauthToken = authResult.access_token;
+                socket.emit('token', authResult);
                 createPicker();
-                }
+            }
+        }
 
-                function handleAuthResult(authResult) {
-                    if (authResult && !authResult.error) {
-                        oauthToken = authResult.access_token;
-                        socket.emit('token', authResult);
-                        createPicker();
-                    }
-                }
+        // Create and render a Picker object for searching images.
+        function createPicker() {
+            if (pickerApiLoaded && oauthToken) {
+                var docs_view = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
+                    .setIncludeFolders(true)
+                    .setSelectFolderEnabled(true)
+                var picker = new google.picker.PickerBuilder()
+                    .enableFeature(google.picker.Feature.NAV_HIDDEN)
+                    .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
+                    .setAppId(appId)
+                    .setOAuthToken(oauthToken)
+                    .setTitle('Select Folder')
+                    .addView(docs_view)
+                    .setDeveloperKey(developerKey)
+                    .setCallback(pickerCallback)
+                    .build();
+                picker.setVisible(true);
+            }
+        }
 
-                // Create and render a Picker object for searching images.
-                function createPicker() {
-                    if (pickerApiLoaded && oauthToken) {
-                        var docs_view = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
-                                .setIncludeFolders(true)
-                                .setSelectFolderEnabled(true)
-                        var picker = new google.picker.PickerBuilder()
-                            .enableFeature(google.picker.Feature.NAV_HIDDEN)
-                            .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
-                            .setAppId(appId)
-                            .setOAuthToken(oauthToken)
-                            .setTitle('Select Folder')
-                            .addView(docs_view)
-                            .setDeveloperKey(developerKey)
-                            .setCallback(pickerCallback)
-                            .build();
-                        picker.setVisible(true);
-                    }
-                }
+        // callback implementation.
+        function pickerCallback(data) {
+            if (data.action == google.picker.Action.PICKED) {
+                window.app.folderid = data.docs[0].id;
+                socket.emit('export', [window.app.filename, window.app.folderid])
+            }
+        }
+    </script>
+</head>
 
-                // callback implementation.
-                function pickerCallback(data) {
-                    if (data.action == google.picker.Action.PICKED) {
-                        window.app.folderid = data.docs[0].id;
-                        socket.emit('export', [window.app.filename, window.app.folderid])
-                    }
-                }
-            </script>
-        </head>
+<body>
 
-        <body>
-
-            <div id="app">
-                <b-navbar type="dark" variant="dark">
-                    <b-navbar-nav>
-                        <b-navbar-nav>
-                            <b-nav-item href="/home">Home</b-nav-item>
-                            <b-nav-item href="/graphs">Graphs</b-nav-item>
-                            <b-nav-item href="/gd">Google Drive</b-nav-item>
-                        </b-navbar-nav>
-                    </b-navbar-nav>
-                </b-navbar>
+    <div id="app">
+        <b-navbar type="dark" variant="dark">
+            <b-navbar-nav>
+                <b-navbar-nav>
+                    <b-nav-item href="/home">Home</b-nav-item>
+                    <b-nav-item href="/graphs">Graphs</b-nav-item>
+                    <b-nav-item href="/gd">Google Drive</b-nav-item>
+                </b-navbar-nav>
+            </b-navbar-nav>
+        </b-navbar>
 
 
-                <b-container>
-                    <b-jumbotron header="GoogleDrive" lead="Save data into .csv or .dat file format">
-                        <hr class="my-4">
-                    </b-jumbotron>
+        <b-container>
+            <b-jumbotron header="GoogleDrive" lead="Save data into .csv or .dat file format">
+                <hr class="my-4">
+            </b-jumbotron>
 
-                    <div>
-                        <b-form>
-                            <b-input-group class="record-inputs">
-                                <b-form-input
-                                    id="record-filename"
-                                    v-model="filename"
-                                    type="text"
-                                    placeholder="filename"
-                                    required
-                                ></b-form-input>
-                                <b-input-group-append>
-                                <b-button @click="onExport" variant="outline-primary">Export</b-button>
-                            </b-input-group>
-                        </b-form>
-                    </div>
-
-                </b-container>
-                    
-
+            <div>
+                <b-form>
+                    <b-input-group class="record-inputs">
+                        <b-form-input id="record-filename" v-model="filename" type="text" placeholder="filename"
+                            required></b-form-input>
+                        <b-input-group-append>
+                            <b-button @click="onExport" variant="outline-primary">Export</b-button>
+                    </b-input-group>
+                </b-form>
             </div>
-                <script>
-                    
-                </script>
-                <script>
-                    window.app = new Vue({
-                    el: '#app',
-                    data: {
-                        name: '',
-                        filename: '',
-                        folderid: '',
-                    },
-                    methods: {
-                      onExport(event) {
-                          event.preventDefault();
-                          loadPicker();
-                      }  
-                    },
-                    computed: {
-                        showAlert() {
-                        return this.name.length > 4 ? true : false
-                        }
-                    }
-                    })
-                </script>
 
-        </body>
- </html>
+        </b-container>
+
+
+    </div>
+    <div><canvas id="myChart" width="200" height="200"></canvas></div>
+
+    <script>
+
+        socket.on('mongoData', function (data) {
+            console.log(data);
+        })
+
+
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
+                datasets: [{
+                    label: '# of Votes',
+                    data: [12, 19, 3, 5, 2, 3],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+
+
+    </script>
+
+
+
+
+
+    <script>
+        window.app = new Vue({
+            el: '#app',
+            data: {
+                name: '',
+                filename: '',
+                folderid: '',
+            },
+            methods: {
+                onExport(event) {
+                    event.preventDefault();
+                    loadPicker();
+                }
+            },
+            computed: {
+                showAlert() {
+                    return this.name.length > 4 ? true : false
+                }
+            }
+        })
+    </script>
+
+</body>
+
+</html>
