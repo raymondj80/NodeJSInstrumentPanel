@@ -186,14 +186,14 @@ app.get(
   }
 );
 
-app.get("/update.js", function (req, res) {
-  res.sendFile(__dirname + "/update.js");
-});
+// app.get("/update.js", function (req, res) {
+//   res.sendFile(__dirname + "/update.js");
+// });
 
-// retrieve temp data on set interval
-setInterval(function () {
-  getData();
-  // send it to all connected clients
-  io.emit("data", myData);
-  // console.log('Last updated: ' + new Date());
-}, 1000);
+// // retrieve temp data on set interval
+// setInterval(function () {
+//   getData();
+//   // send it to all connected clients
+//   io.emit("data", myData);
+//   // console.log('Last updated: ' + new Date());
+// }, 1000);
