@@ -69,6 +69,7 @@ function uploadFile(authClient, filename, folderid) {
         console.error(err);
       } else {
         console.log("File uploaded onto Google Drive");
+        io.emit("fileuploaded", "");
       }
     }
   );
@@ -142,7 +143,6 @@ io.on("connection", function (socket) {
     ];
     const transforms = [];
     const json2csvParser = new Parser({ fields, transforms });
-    console.log(mongoData);
     const csv = json2csvParser.parse(mongoData);
     fs.writeFile(`data/${filename}.csv`, csv, (err) => {
       if (err) console.log(err);
@@ -150,8 +150,15 @@ io.on("connection", function (socket) {
         authenticate(CRED_PATH, TOKEN_PATH, uploadFile, filename, folderid);
       }
     });
+    // io.emit("mongoData", mongoData);
   });
 });
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
 
 app.get("/home", function (req, res) {
   res.sendFile(__dirname + "/views/home.html");
@@ -161,24 +168,32 @@ app.get("/graphs", function (req, res) {
   res.sendFile(__dirname + "/views/graphs.html");
 });
 
-app.get("/gd", function (req, res) {
-  if (filter != null) {
-    StreamData.findById(filter).then((res) => {
-      mongoData = res.toJSON().data;
-      io.emit("mongoData", mongoData);
-    });
+app.get(
+  "/gd",
+  async function (req, res, next) {
+    res.sendFile(__dirname + "/views/gd.html");
+    await sleep(250);
+    next();
+  },
+  function (req, res, next) {
+    if (filter != null) {
+      StreamData.findById(filter).then((res) => {
+        mongoData = res.toJSON().data;
+        io.emit("mongoData", mongoData);
+        console.log("mongoData emitted");
+      });
+    }
   }
-  res.sendFile(__dirname + "/views/gd.html");
-});
+);
 
 app.get("/update.js", function (req, res) {
   res.sendFile(__dirname + "/update.js");
 });
 
 // retrieve temp data on set interval
-// setInterval(function() {
-//     getData();
-//     // send it to all connected clients
-//     io.emit('data', myData);
-//     // console.log('Last updated: ' + new Date());
-// }, 1000);
+setInterval(function () {
+  getData();
+  // send it to all connected clients
+  io.emit("data", myData);
+  // console.log('Last updated: ' + new Date());
+}, 1000);

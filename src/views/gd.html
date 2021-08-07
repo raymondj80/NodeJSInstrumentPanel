@@ -91,13 +91,58 @@
                 socket.emit('export', [window.app.filename, window.app.folderid])
             }
         }
+
+        function parseData(jsondata) {
+
+            var data = {
+                'temp': [],
+                'Vx1': [],
+                'Vy1': [],
+                'field': [],
+                'freq1': [],
+                'freq2': [],
+                'theta1': [],
+                'theta2': [],
+                'time': [],
+            }
+
+            jsondata.forEach(dict => {
+                data.temp.push(dict.temp);
+                data.field.push(dict.field);
+            })
+            data.time = [...Array(data.temp.length).keys()];
+            console.log(data.temp.length)
+
+            return data;
+        }
+
+        function renderGraph(dataDict, chart) {
+            chart.data.datasets[0].data = dataDict.temp;
+            chart.data.labels = dataDict.time;
+            chart.update();
+        }
+
+
+        socket.on("fileuploaded", function (data) {
+            console.log('fileuploaded');
+            window.app.toggleVueAlert();
+        })
+
+        socket.on("mongoData", function (mongoData) {
+            console.log(mongoData);
+            const reformatData = parseData(mongoData);
+            renderGraph(reformatData, myChart);
+        })
+
     </script>
 </head>
 
 <body>
 
     <div id="app">
+
         <b-navbar type="dark" variant="dark">
+
             <b-navbar-nav>
                 <b-navbar-nav>
                     <b-nav-item href="/home">Home</b-nav-item>
@@ -106,7 +151,7 @@
                 </b-navbar-nav>
             </b-navbar-nav>
         </b-navbar>
-
+        <b-alert :show="toggleVue" dismissible variant="success">Success Alert</b-alert>
 
         <b-container>
             <b-jumbotron header="GoogleDrive" lead="Save data into .csv or .dat file format">
@@ -125,61 +170,29 @@
             </div>
 
         </b-container>
-
-
     </div>
-    <div><canvas id="myChart" width="200" height="200"></canvas></div>
+    <div class="chart-container"
+        style="margin-left: 100px; display: flex; justify-content: center; height:40vh; width:80vw">
+        <canvas id="myChart"></canvas>
+    </div>
+
 
     <script>
-
-        socket.on('mongoData', function (data) {
-            console.log(data);
-        })
-
-
         var ctx = document.getElementById('myChart').getContext('2d');
         var myChart = new Chart(ctx, {
-            type: 'bar',
+            type: 'line',
             data: {
-                labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
                 datasets: [{
-                    label: '# of Votes',
-                    data: [12, 19, 3, 5, 2, 3],
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.2)',
-                        'rgba(54, 162, 235, 0.2)',
-                        'rgba(255, 206, 86, 0.2)',
-                        'rgba(75, 192, 192, 0.2)',
-                        'rgba(153, 102, 255, 0.2)',
-                        'rgba(255, 159, 64, 0.2)'
-                    ],
-                    borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)',
-                        'rgba(255, 159, 64, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
+                    label: "Test dataset",
+                    data: [],
+                    fill: false,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }],
+                labels: []
             }
-        });
-
-
-
+        })
     </script>
-
-
-
-
 
     <script>
         window.app = new Vue({
@@ -188,11 +201,15 @@
                 name: '',
                 filename: '',
                 folderid: '',
+                toggleVue: false,
             },
             methods: {
                 onExport(event) {
                     event.preventDefault();
                     loadPicker();
+                },
+                toggleVueAlert() {
+                    this.toggleVue = !this.toggleVue;
                 }
             },
             computed: {
