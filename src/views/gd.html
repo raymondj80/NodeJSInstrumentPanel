@@ -6,14 +6,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-
     <!-- Required Stylesheets -->
     <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css" />
     <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css" />
-
     <!-- Load polyfills to support older browsers -->
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es2015%2CIntersectionObserver"></script>
-
     <!-- Required scripts -->
     <script src="https://unpkg.com/vue@latest/dist/vue.js"></script>
     <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
@@ -24,125 +21,120 @@
     <script type="text/javascript" src="/update.js"></script>
     <script type="text/javascript" src="https://apis.google.com/js/api.js?onload=loadPicker"></script>
     <script type="text/javascript">
+    var developerKey = 'AIzaSyDWpKfzB9fTS16iTBg0FqT7_kRr0fq0rRI';
+    var clientId = '869904555675-kpje9fhnaoncru44ekg1ucgnvsa5cjlm.apps.googleusercontent.com';
+    var appId = '869904555675';
+    var scope = [
+        'https://www.googleapis.com/auth/drive'
+    ];
+    var pickerApiLoaded = false;
+    var oauthToken;
+    var socket = io();
+    var graphData = {
+        'temp': [],
+        'Vx1': [],
+        'Vy1': [],
+        'field': [],
+        'freq1': [],
+        'freq2': [],
+        'theta1': [],
+        'theta2': [],
+        'time': [],
+    }
 
-        var developerKey = 'AIzaSyDWpKfzB9fTS16iTBg0FqT7_kRr0fq0rRI';
-        var clientId = '869904555675-kpje9fhnaoncru44ekg1ucgnvsa5cjlm.apps.googleusercontent.com';
-        var appId = '869904555675';
-        var scope = [
-            'https://www.googleapis.com/auth/drive'
-        ];
-        var pickerApiLoaded = false;
-        var oauthToken;
-        var socket = io();
+    // Use the Google API Loader script to load the google.picker script.
+    function loadPicker() {
+        gapi.load('auth', { 'callback': onAuthApiLoad });
+        gapi.load('picker', { 'callback': onPickerApiLoad });
+    }
 
-        // Use the Google API Loader script to load the google.picker script.
-        function loadPicker() {
-            gapi.load('auth', { 'callback': onAuthApiLoad });
-            gapi.load('picker', { 'callback': onPickerApiLoad });
-        }
+    function onAuthApiLoad() {
+        window.gapi.auth.authorize({
+                'client_id': clientId,
+                'scope': scope,
+                'immediate': false
+            },
+            handleAuthResult);
+    }
 
-        function onAuthApiLoad() {
-            window.gapi.auth.authorize(
-                {
-                    'client_id': clientId,
-                    'scope': scope,
-                    'immediate': false
-                },
-                handleAuthResult);
-        }
+    function onPickerApiLoad() {
+        pickerApiLoaded = true;
+        createPicker();
+    }
 
-        function onPickerApiLoad() {
-            pickerApiLoaded = true;
+    function handleAuthResult(authResult) {
+        if (authResult && !authResult.error) {
+            oauthToken = authResult.access_token;
+            socket.emit('token', authResult);
             createPicker();
         }
+    }
 
-        function handleAuthResult(authResult) {
-            if (authResult && !authResult.error) {
-                oauthToken = authResult.access_token;
-                socket.emit('token', authResult);
-                createPicker();
-            }
+    // Create and render a Picker object for searching images.
+    function createPicker() {
+        if (pickerApiLoaded && oauthToken) {
+            var docs_view = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
+                .setIncludeFolders(true)
+                .setSelectFolderEnabled(true)
+            var picker = new google.picker.PickerBuilder()
+                .enableFeature(google.picker.Feature.NAV_HIDDEN)
+                .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
+                .setAppId(appId)
+                .setOAuthToken(oauthToken)
+                .setTitle('Select Folder')
+                .addView(docs_view)
+                .setDeveloperKey(developerKey)
+                .setCallback(pickerCallback)
+                .build();
+            picker.setVisible(true);
         }
+    }
 
-        // Create and render a Picker object for searching images.
-        function createPicker() {
-            if (pickerApiLoaded && oauthToken) {
-                var docs_view = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
-                    .setIncludeFolders(true)
-                    .setSelectFolderEnabled(true)
-                var picker = new google.picker.PickerBuilder()
-                    .enableFeature(google.picker.Feature.NAV_HIDDEN)
-                    .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
-                    .setAppId(appId)
-                    .setOAuthToken(oauthToken)
-                    .setTitle('Select Folder')
-                    .addView(docs_view)
-                    .setDeveloperKey(developerKey)
-                    .setCallback(pickerCallback)
-                    .build();
-                picker.setVisible(true);
-            }
+    // callback implementation.
+    function pickerCallback(data) {
+        if (data.action == google.picker.Action.PICKED) {
+            window.app.folderid = data.docs[0].id;
+            socket.emit('export', [window.app.filename, window.app.folderid])
         }
+    }
 
-        // callback implementation.
-        function pickerCallback(data) {
-            if (data.action == google.picker.Action.PICKED) {
-                window.app.folderid = data.docs[0].id;
-                socket.emit('export', [window.app.filename, window.app.folderid])
-            }
-        }
-
-        function parseData(jsondata) {
-
-            var data = {
-                'temp': [],
-                'Vx1': [],
-                'Vy1': [],
-                'field': [],
-                'freq1': [],
-                'freq2': [],
-                'theta1': [],
-                'theta2': [],
-                'time': [],
+    function parseData(jsondata, dataDict) {
+        jsondata.forEach(dict => {
+            for (const s of Object.keys(graphData)) {
+                dataDict[s].push(dict[s]);
             }
 
-            jsondata.forEach(dict => {
-                data.temp.push(dict.temp);
-                data.field.push(dict.field);
-            })
-            data.time = [...Array(data.temp.length).keys()];
-            console.log(data.temp.length)
-
-            return data;
-        }
-
-        function renderGraph(dataDict, chart) {
-            chart.data.datasets[0].data = dataDict.temp;
-            chart.data.labels = dataDict.time;
-            chart.update();
-        }
-
-
-        socket.on("fileuploaded", function (data) {
-            console.log('fileuploaded');
-            window.app.toggleVueAlert();
         })
+        dataDict.time = [...Array(dataDict.temp.length).keys()];
+        return dataDict;
+    }
 
-        socket.on("mongoData", function (mongoData) {
-            console.log(mongoData);
-            const reformatData = parseData(mongoData);
-            renderGraph(reformatData, myChart);
-        })
+    function renderGraph(chart, dataDict, axisX, axisY) {
+        chart.data.datasets[0].data = dataDict[axisY];
+        chart.data.labels = dataDict[axisX];
+        chart.options.scales.y.title.text = axisY;
+        chart.options.scales.x.title.text = axisX;
 
+        chart.update();
+    }
+
+
+    socket.on("fileuploaded", function(data) {
+        console.log('fileuploaded');
+        window.app.toggleVueAlert();
+    })
+
+    socket.on("mongoData", function(mongoData) {
+        console.log(mongoData);
+        const reformatData = parseData(mongoData, graphData);
+        renderGraph(myChart, graphData, 'time', 'temp');
+    })
     </script>
 </head>
 
 <body>
-
     <div id="app">
-
         <b-navbar type="dark" variant="dark">
-
             <b-navbar-nav>
                 <b-navbar-nav>
                     <b-nav-item href="/home">Home</b-nav-item>
@@ -152,74 +144,99 @@
             </b-navbar-nav>
         </b-navbar>
         <b-alert :show="toggleVue" dismissible variant="success">Success Alert</b-alert>
-
         <b-container>
             <b-jumbotron header="GoogleDrive" lead="Save data into .csv or .dat file format">
                 <hr class="my-4">
             </b-jumbotron>
-
             <div>
                 <b-form>
                     <b-input-group class="record-inputs">
-                        <b-form-input id="record-filename" v-model="filename" type="text" placeholder="filename"
-                            required></b-form-input>
+                        <b-form-input id="record-filename" v-model="filename" type="text" placeholder="filename" required></b-form-input>
                         <b-input-group-append>
                             <b-button @click="onExport" variant="outline-primary">Export</b-button>
                     </b-input-group>
                 </b-form>
             </div>
-
+            <div style="display: inline-block;">
+                <b-form-select v-model="selectedX" :options="optionsX" @change="updateGraph"></b-form-select>
+                <b-form-select v-model="selectedY" :options="optionsY" @change="updateGraph"></b-form-select>
+            </div>
         </b-container>
     </div>
-    <div class="chart-container"
-        style="margin-left: 100px; display: flex; justify-content: center; height:40vh; width:80vw">
+    <div class="chart-container" style="margin-left: 100px; display: flex; justify-content: center; height:40vh; width:80vw">
         <canvas id="myChart"></canvas>
     </div>
-
-
     <script>
-        var ctx = document.getElementById('myChart').getContext('2d');
-        var myChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                datasets: [{
-                    label: "Test dataset",
-                    data: [],
-                    fill: false,
-                    borderColor: 'rgb(75, 192, 192)',
-                    tension: 0.1
-                }],
-                labels: []
-            }
-        })
-    </script>
-
-    <script>
-        window.app = new Vue({
-            el: '#app',
-            data: {
-                name: '',
-                filename: '',
-                folderid: '',
-                toggleVue: false,
-            },
-            methods: {
-                onExport(event) {
-                    event.preventDefault();
-                    loadPicker();
+    var ctx = document.getElementById('myChart').getContext('2d');
+    var myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            datasets: [{
+                data: [],
+                fill: false,
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }],
+            labels: []
+        },
+        options: {
+            scales: {
+                y: {
+                    title: {
+                        display: true
+                    }
                 },
-                toggleVueAlert() {
-                    this.toggleVue = !this.toggleVue;
+                x: {
+                    title: {
+                        display: true
+                    }
                 }
             },
-            computed: {
-                showAlert() {
-                    return this.name.length > 4 ? true : false
+            plugins: {
+                legend: {
+                    display: false
                 }
             }
-        })
+        }
+    })
     </script>
-
+    <script>
+    window.app = new Vue({
+        el: '#app',
+        data: {
+            name: '',
+            filename: '',
+            folderid: '',
+            toggleVue: false,
+            selectedX: null,
+            selectedY: null,
+            optionsX: [{ value: null, text: 'Select X Axis' }].concat(Object.keys(graphData).map(function(e) { return { value: e, text: e } })),
+            optionsY: [{ value: null, text: 'Select Y Axis' }].concat(Object.keys(graphData).map(function(e) { return { value: e, text: e } }))
+        },
+        methods: {
+            onExport(event) {
+                event.preventDefault();
+                loadPicker();
+            },
+            toggleVueAlert() {
+                this.toggleVue = !this.toggleVue;
+            },
+            updateGraph() {
+                if (this.selectedX != null && this.selectedY != null) {
+                    console.log("update");
+                    renderGraph(myChart, graphData, this.selectedX, this.selectedY);
+                } else {
+                    console.log("don't update");
+                }
+            },
+        },
+        computed: {
+            showAlert() {
+                return this.name.length > 4 ? true : false
+            }
+        }
+    })
+    </script>
 </body>
 
 </html>

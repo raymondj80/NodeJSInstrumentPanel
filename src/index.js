@@ -186,6 +186,11 @@ app.get(
   }
 );
 
+app.get("/update.js", function (req, res) {
+  res.sendFile(__dirname + "/update.js");
+});
+
+
 // app.get("/update.js", function (req, res) {
 //   res.sendFile(__dirname + "/update.js");
 // });
