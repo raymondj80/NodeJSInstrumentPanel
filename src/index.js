@@ -172,7 +172,7 @@ app.get(
   "/gd",
   async function (req, res, next) {
     res.sendFile(__dirname + "/views/gd.html");
-    await sleep(250);
+    await sleep(500);
     next();
   },
   function (req, res, next) {
