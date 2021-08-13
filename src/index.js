@@ -75,6 +75,12 @@ function uploadFile(authClient, filename, folderid) {
   );
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
 mongoose
   .connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then((result) =>
@@ -154,12 +160,6 @@ io.on("connection", function (socket) {
   });
 });
 
-function sleep(ms) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
-
 app.get("/home", function (req, res) {
   res.sendFile(__dirname + "/views/home.html");
 });
@@ -172,7 +172,7 @@ app.get(
   "/gd",
   async function (req, res, next) {
     res.sendFile(__dirname + "/views/gd.html");
-    await sleep(500);
+    await sleep(250);
     next();
   },
   function (req, res, next) {
@@ -190,7 +190,7 @@ app.get("/update.js", function (req, res) {
   res.sendFile(__dirname + "/update.js");
 });
 
-// retrieve temp data on set interval
+// // retrieve temp data on set interval
 setInterval(function () {
   getData();
   // send it to all connected clients

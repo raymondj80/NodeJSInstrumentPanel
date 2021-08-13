@@ -94,8 +94,8 @@ class SR860(vxi11.Instrument):
     def frequency(self):
         return self.ask("FREQ?")
 
-
-my_QD = QDInstrument('DYNACOOL')
+LI1 = SR860("140.247.189.23")
+LI2 = SR860("140.247.189.96")
 
 try:
     LI1 = SR860(TCPIP1)
@@ -118,22 +118,22 @@ except:
 try:
     LI2 = SR860(TCPIP2)
     lockin_json2 = {
-        "Vx2": LI2.vx,
-        "Vy2": LI2.vy,
-        "freq2": LI2.frequency,
-        "theta2": LI2.theta
+        "Vx1": LI2.vx,
+        "Vy1": LI2.vy,
+        "freq1": LI2.frequency,
+        "theta1": LI2.theta
     }
     LI2.close()
 
 except:
     lockin_json2 = {
-        "Vx2": None,
-        "Vy2": None,
-        "freq2": None,
-        "theta2": None
+        "Vx1": None,
+        "Vy1": None,
+        "freq1": None,
+        "theta1": None
     }
 
-
+my_QD = QDInstrument('DYNACOOL')
 myjson = json.loads(my_QD.get_data())
 myjson.update(lockin_json1)
 myjson.update(lockin_json2)

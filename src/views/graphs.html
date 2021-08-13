@@ -1,116 +1,233 @@
 <!DOCTYPE html>
 <html lang="en">
-        <head>
-            <!-- Required meta tags -->
-            <meta charset="utf-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-            <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 
-            <!-- Required Stylesheets -->
-            <link
-            type="text/css"
-            rel="stylesheet"
-            href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css"
-            />
-            <link
-            type="text/css"
-            rel="stylesheet"
-            href="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css"
-            />
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <!-- Required Stylesheets -->
+    <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css" />
+    <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css" />
+    <!-- Load polyfills to support older browsers -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es2015%2CIntersectionObserver"></script>
+    <!-- Required scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/1.1.1/chartjs-plugin-zoom.min.js"></script>
+    <script src="https://unpkg.com/vue@latest/dist/vue.js"></script>
+    <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
+    <script src='/socket.io/socket.io.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/0.9.90/jsrender.min.js"></script>
+    <script type="text/javascript" src="/update.js"></script>
+</head>
 
-            <!-- Load polyfills to support older browsers -->
-            <script src="https://polyfill.io/v3/polyfill.min.js?features=es2015%2CIntersectionObserver"></script>
-
-            <!-- Required scripts -->
-            <script src="https://unpkg.com/vue@latest/dist/vue.js"></script>
-            <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
-            <script src="https://cdn.plot.ly/plotly-2.1.0.min.js"></script>
-            <script src='/socket.io/socket.io.js'></script>
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/0.9.90/jsrender.min.js"></script>
-            <script type="text/javascript" src="/update.js"></script>
-        </head>
-
-        <body>
-
-            <div id="app">
-                <b-navbar type="dark" variant="dark">
-                    <b-navbar-nav>
-                        <b-navbar-nav>
-                            <b-nav-item href="/home">Home</b-nav-item>
-                            <b-nav-item href="/graphs">Graphs</b-nav-item>
-                            <b-nav-item href="/gd">Google Drive</b-nav-item>
-                        </b-navbar-nav>
-                        <!-- <b-nav-item-dropdown text="User" right>
+<body>
+    <div id="app">
+        <b-navbar type="dark" variant="dark">
+            <b-navbar-nav>
+                <b-navbar-nav>
+                    <b-nav-item href="/home">Home</b-nav-item>
+                    <b-nav-item href="/graphs">Graphs</b-nav-item>
+                    <b-nav-item href="/gd">Google Drive</b-nav-item>
+                </b-navbar-nav>
+                <!-- <b-nav-item-dropdown text="User" right>
                             <b-dropdown-item href="#">Account</b-dropdown-item>
                             <b-dropdown-item href="#">Settings</b-dropdown-item>
                         </b-nav-item-dropdown> -->
-                    </b-navbar-nav>
-                </b-navbar>
-
-                <b-container>
-                    <b-jumbotron header="Graphs" lead="Plotly graphs for PPMS and SR860 Lock-in">
-                        <hr class="my-4">
-                    </b-jumbotron>
-                </b-container>
+            </b-navbar-nav>
+        </b-navbar>
+        <b-container>
+            <b-jumbotron header="Graphs" lead="Plotly graphs for PPMS and SR860 Lock-in">
+                <hr class="my-4">
+            </b-jumbotron>
+            <div style="display: inline-block;">
+                <b-form-select v-model="chartOptions[0].selectedX" :options="chartOptions[0].optionsX"
+                    @change="updateGraph"></b-form-select>
+                <b-form-select v-model="chartOptions[0].selectedY" :options="chartOptions[0].optionsY"
+                    @change="updateGraph"></b-form-select>
+                <b-form-select v-model="chartOptions[1].selectedX" :options="chartOptions[1].optionsX"
+                    @change="updateGraph"></b-form-select>
+                <b-form-select v-model="chartOptions[1].selectedY" :options="chartOptions[1].optionsY"
+                    @change="updateGraph"></b-form-select>
+                <b-form-select v-model="chartOptions[2].selectedX" :options="chartOptions[2].optionsX"
+                    @change="updateGraph"></b-form-select>
+                <b-form-select v-model="chartOptions[2].selectedY" :options="chartOptions[2].optionsY"
+                    @change="updateGraph"></b-form-select>
+                <b-form-select v-model="chartOptions[3].selectedX" :options="chartOptions[3].optionsX"
+                    @change="updateGraph"></b-form-select>
+                <b-form-select v-model="chartOptions[3].selectedY" :options="chartOptions[3].optionsY"
+                    @change="updateGraph"></b-form-select>
             </div>
+        </b-container>
+    </div>
 
-            <div id="temp-chart"></div>
-            <div id="field-chart"></div>
+    <div id="chart-container1" style="height:20vh; width:100%; padding:20px">
+        <div style="float: left;   width: 50%">
+            <canvas id="myChart0"></canvas>
+        </div>
+        <div style="float: left; width: 50%">
+            <canvas id="myChart1"></canvas>
+        </div>
+    </div>
 
-            <script>
-                var cnt = 0;
-                function updateGraph(data) {
-                    if(cnt === 0) {
-                        Plotly.newPlot('temp-chart',[{
-                            y:[data.temp],
-                            type:'line'
-                        }]);
-                        Plotly.newPlot('field-chart',[{
-                            y:[data.field],
-                            type:'line'
-                        }]);       
-                    }
-                    Plotly.extendTraces('temp-chart', {y:[[data.temp]]}, [0]);
-                    Plotly.extendTraces('field-chart', {y:[[data.field]]}, [0]);
-                    cnt++;
-                    if(cnt > 500) {
-                        Plotly.relayout('temp-chart',{
-                            xaxis: {
-                                range: [cnt-500,cnt]
-                            }
-                        });
-                        Plotly.relayout('field-chart',{
-                            xaxis: {
-                                range: [cnt-500,cnt]
-                            }
-                        });
-                    };
-                };
+    <div id="chart-container2" style="height:20vh; width:100%; padding:20px">
+        <div style="float: left; width: 50%">
+            <canvas id="myChart2"></canvas>
+        </div>
+        <div style="float: left;  width: 50%">
+            <canvas id="myChart3"></canvas>
+        </div>
+    </div>
 
-                var socket = io();
 
-                socket.on('data', function (data) {    
-                    updateGraph(data);
-                });
-
-            </script>
-
-            <script>
-                window.app = new Vue({
-                el: '#app',
+    <script>
+        var chartArray = []
+        for (var i in [...Array(4).keys()]) {
+            var ctx = document.getElementById('myChart' + i).getContext('2d');
+            var myChart = new Chart(ctx, {
+                type: 'line',
                 data: {
-                    name: ''
+                    datasets: [
+                        {
+                            data: [],
+                        }
+                    ],
                 },
-                computed: {
-                    showAlert() {
-                    return this.name.length > 4 ? true : false
+                options: {
+                    showLine: false,
+                    pointBackgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgba(255,99,132,1)',
+                    scales: {
+                        y: {
+                            title: {
+                                display: true
+                            }
+                        },
+                        x: {
+                            type: 'linear',
+                            title: {
+                                display: true
+                            },
+                            position: 'bottom',
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                    },
+                    parsing: {
+                        xAxisKey: 'time',
+                        yAxisKey: 'temp'
                     }
+                },
+            });
+            chartArray.push(myChart)
+        }
+    </script>
+    <script>
+        var socket = io();
+        var resetGraph = false;
+        const graphOptions = ['time', 'temp', 'field', 'Vx1', 'Vy1', 'freq1', 'Vx2', 'Vy2', 'freq2'];
+        if (sessionStorage.streamData === undefined) {
+            sessionStorage.setItem('streamData', JSON.stringify([]))
+        }
+        if (sessionStorage.cnt === undefined) {
+            sessionStorage.setItem('cnt', '0');
+        }
+
+        function storeData(data) {
+            prevData = JSON.parse(sessionStorage.streamData)
+            if (prevData.length > 500) {
+                resetGraph = true;
+                sessionStorage.streamData = JSON.stringify([]);
+                prevData = JSON.parse(sessionStorage.streamData);
+                sessionStorage.cnt = '0';
+            }
+            data['time'] = parseInt(sessionStorage.cnt);
+            prevData.push(data);
+            sessionStorage.streamData = JSON.stringify(prevData);
+        }
+
+        function instantiateChartOptions() {
+            var chart_opt = []
+            for (var i in [...Array(4)]) {
+                chart_opt.push(new Object({
+                    selectedX: null,
+                    selectedY: null,
+                    optionsX: [{ value: null, text: 'Select X Axis' }].concat(graphOptions.map(function (e) { return { value: e, text: e } })),
+                    optionsY: [{ value: null, text: 'Select Y Axis' }].concat(graphOptions.map(function (e) { return { value: e, text: e } }))
+                }))
+            }
+            chart_opt[0].selectedX = 'time';
+            chart_opt[0].selectedY = 'temp';
+            chart_opt[1].selectedX = 'time';
+            chart_opt[1].selectedY = 'field';
+            return chart_opt
+        }
+
+        function renderGraph(chart, dataDictStr, axisX, axisY) {
+            dataDict = JSON.parse(dataDictStr);
+
+            chart.data.datasets[0].data = dataDict;
+            chart.options.parsing.xAxisKey = axisX;
+            chart.options.parsing.yAxisKey = axisY;
+            chart.options.scales.y.title.text = axisY;
+            chart.options.scales.x.title.text = axisX;
+
+            // specific options for axisX = time
+            if (axisX === 'time') {
+                chart.options.showLine = true;
+                if (resetGraph === true) {
+                    chart.options.scales.x.max = 20;
+                    resetGraph = false;
+                } else {
+                    chart.options.scales.x.max = parseInt(sessionStorage.cnt);
                 }
-                })
-            </script>
+            } else {
+                chart.options.scales.x.max = null;
+                chart.options.showLine = false;
+            }
+            chart.update();
+        }
+
+        socket.on('data', function (data) {
+            if (data != null) {
+                storeData(data);
+                for (var i in [...Array(4).keys()]) {
+                    window.app.updateGraph(i);
+                }
+                sessionStorage.cnt = (parseInt(sessionStorage.cnt) + 1).toString();
+            }
+        })
 
 
-                
-        </body>
- </html>
+    </script>
+    <script>
+        window.app = new Vue({
+            el: '#app',
+            methods: {
+                updateGraph(chart_ind) {
+                    // check if chartOptions has been instantiated
+                    if (this.chartOptions != undefined) {
+                        if (this.chartOptions[chart_ind].selectedX != null && this.chartOptions[chart_ind].selectedY != null) {
+                            renderGraph(chartArray[chart_ind], sessionStorage.streamData, this.chartOptions[chart_ind].selectedX, this.chartOptions[chart_ind].selectedY);
+                        }
+                    }
+                },
+
+            },
+            data: {
+                chartOptions: instantiateChartOptions()
+            },
+            computed: {
+                showAlert() {
+                    return this.name.length > 4 ? true : false
+                }
+            }
+        })
+    </script>
+</body>
+
+</html>

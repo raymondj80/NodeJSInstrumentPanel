@@ -1,225 +1,231 @@
 <!DOCTYPE html>
 <html lang="en">
-        <head>
-            <!-- Required meta tags -->
-            <meta charset="utf-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-            <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 
-            <!-- Required Stylesheets -->
-            <link
-            type="text/css"
-            rel="stylesheet"
-            href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css"
-            />
-            <link
-            type="text/css"
-            rel="stylesheet"
-            href="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css"
-            />
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 
-            <!-- Load polyfills to support older browsers -->
-            <script src="https://polyfill.io/v3/polyfill.min.js?features=es2015%2CIntersectionObserver"></script>
+    <!-- Required Stylesheets -->
+    <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css" />
+    <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css" />
 
-            <!-- Required scripts -->
-            <script src="https://unpkg.com/vue@latest/dist/vue.js"></script>
-            <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
-            <script src="https://cdn.plot.ly/plotly-2.1.0.min.js"></script>
-            <script src='/socket.io/socket.io.js'></script>
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/0.9.90/jsrender.min.js"></script>
-            <script type="text/javascript" src="/update.js"></script>
+    <!-- Load polyfills to support older browsers -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es2015%2CIntersectionObserver"></script>
 
-            <script>
-                var cnt = 0;
-                var socket = io();
-                var start_recording = false;
-                var stop_recording = false;
-                var counts = -1;
-                var saveCnt = 0;
-                var countup = 0;
-                var sampleRate = 1; // 1 sample/second
-                var objectID = '';
+    <!-- Required scripts -->
+    <script src="https://unpkg.com/vue@latest/dist/vue.js"></script>
+    <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.1.0.min.js"></script>
+    <script src='/socket.io/socket.io.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/0.9.90/jsrender.min.js"></script>
+    <script type="text/javascript" src="/update.js"></script>
 
-                
-                // update headers 
-                function updateHeader(data) {
-                    for (var key in data) {
-                        // console.log(key);
-                        if (typeof data[key] === "number") {
-                            // round to 9 decimal places
-                            document.getElementById(key.concat('-header')).innerHTML = data[key].toFixed(9);
-                        }
-                        else {
-                            document.getElementById(key.concat('-header')).innerHTML = data[key];
-                        }
-                    };
-                };
-                
-                // On packet recieved update header/record functions
-                socket.on('data', function (data) {
-                    var t = window.app.time.split(':');
-                    
-                    if (start_recording) {
-                        counts = Math.round((+t[0]) * 60 * 60 + (+t[1]) * 60 + (+t[2]) / sampleRate);
-                        saveDict('new', objectID);
-                        start_recording = false;
-                    }
-                    else if (stop_recording) {
-                        counts = -1;
-                        saveDict('append', objectID);
-                        stop_recording = false;
-                        clearDict();
-                    }
-                    else if (counts > 0) {
-                        if (saveCnt % 500 == 0) {
-                            saveDict('append', objectID);
-                            saveCnt = 0;
-                        }
-                        saveCnt++;
-                        counts = counts - 1;
-                        appendData(socket, data);
-                        updateHeader(data);
-                    }
-                    else if (counts == 0) {
-                        counts = counts - 1;
-                        saveDict('append', objectID);
-                        window.app.log("Finished Recording");
-                        clearDict();
-                    }
-                    else {
-                        updateHeader(data);
-                    }
-                });
+    <script>
+        var cnt = 0;
+        var socket = io();
+        var start_recording = false;
+        var stop_recording = false;
+        var counts = -1;
+        var saveCnt = 0;
+        var countup = 0;
+        var sampleRate = 1; // 1 sample/second
+        var objectID = '';
+        if (sessionStorage.streamData === undefined) {
+            sessionStorage.setItem('streamData', JSON.stringify([]))
+        }
+        if (sessionStorage.cnt === undefined) {
+            sessionStorage.setItem('cnt', '0');
+        }
 
-                socket.on('objectID', function (id) {
-                    console.log(id);
-                    objectID = id;
-                })
-
-            </script>
-
-        </head>
-        <body>
-            
-
-            <div id="app">
-                <b-navbar type="dark" variant="dark">
-                    <b-navbar-nav>
-                      <!-- Navbar dropdowns -->
-                      <b-navbar-nav>
-                        <b-nav-item href="/home">Home</b-nav-item>
-                        <b-nav-item href="/graphs">Graphs</b-nav-item>
-                        <b-nav-item href="/gd">Google Drive</b-nav-item>
-                      </b-navbar-nav>
-                
-                    </b-navbar-nav>
-                  </b-navbar>
+        function storeData(data) {
+            prevData = JSON.parse(sessionStorage.streamData)
+            if (prevData.length > 20) {
+                prevData.shift();
+            }
+            data['time'] = parseInt(sessionStorage.cnt);
+            prevData.push(data);
+            sessionStorage.streamData = JSON.stringify(prevData);
+        }
 
 
-                <b-container>
-                    <b-jumbotron header="ControlPanel" lead="Node.js control panel for PPMS and SR860 Lock-in">
-                        <hr class="my-4">
-                    </b-jumbotron>
-                </b-container>
-                
+        // update headers 
+        function updateHeader(data) {
+            for (var key in data) {
+                // console.log(key);
+                if (typeof data[key] === "number") {
+                    // round to 9 decimal places
+                    document.getElementById(key.concat('-header')).innerHTML = data[key].toFixed(9);
+                }
+                else {
+                    document.getElementById(key.concat('-header')).innerHTML = data[key];
+                }
+            };
+        };
 
-                <b-container class="data-row">
-                        <b-row class="text-center">
-                            <b-col style="white-space:nowrap">
-                                <h4>Temperature: <span id='temp-header'></span></h4>
-                                <h4>Vx1: <span id='Vx1-header'></span></h4>
-                                <h4>Vx2: <span id='Vx2-header'></span></h4>
-                            </b-col>
-                            <b-col style="white-space:nowrap">
-                                <h4>Temperature State: <span id='temp_state-header'></span></h4>
-                                <h4>Vy1: <span id='Vy1-header'></span></h4>
-                                <h4>Vy2: <span id='Vy2-header'></span></h4>
-                            </b-col>
-                            <b-col style="white-space:nowrap">
-                                <h4>Field: <span id='field-header'></span></h4>
-                                <h4>Frequency1: <span id='freq1-header'></span></h4>
-                                <h4>Frequency2: <span id='freq2-header'></span></h4>
-                            </b-col>
-                            <b-col style="white-space:nowrap">
-                                <h4>Field State: <span id='field_state-header'></span></h4>
-                                <h4>Theta1: <span id='theta1-header'></span></h4>
-                                <h4>Theta2: <span id='theta2-header'></span></h4>
-                            </b-col>
-                        </b-row>
-                </b-container>
+        // On packet recieved update header/record functions
+        socket.on('data', function (data) {
+            var t = window.app.time.split(':');
 
-                <b-container class="record-input">
-                    <hr class="my-4">
-                    <div>
-                        <h2>Record</h2>
-                    </div>
-                    <div>
-                        <b-form>
-                            <b-input-group class="record-inputs">
-                                <b-form-input
-                                    id="record-time"
-                                    v-model="time"
-                                    type="text"
-                                    placeholder="HH:mm:ss"
-                                    required
-                                ></b-form-input>
-                                <b-input-group-append>
-                              <b-button-group>
-                                <b-button @click="onStart" variant="outline-success">Start</b-button>
-                                <b-button  @click="onStop" variant="outline-danger">Stop</b-button>
-                            </b-button-group>
-                            </b-input-group-append>
-                            </b-input-group>
-                        </b-form>
-                    </div>
-                </b-container>
-                
-                <b-container class="record-input">
-                    <div>
-                        <hr class="my-4">
-                        <h2>Log</h2>
-                        <ul style="list-style-type:none;" id='messages'></ul>
-                    </div>
-                </b-container>
+            if (start_recording) {
+                counts = Math.round((+t[0]) * 60 * 60 + (+t[1]) * 60 + (+t[2]) / sampleRate);
+                saveDict('new', objectID);
+                start_recording = false;
+            }
+            else if (stop_recording) {
+                counts = -1;
+                saveDict('append', objectID);
+                stop_recording = false;
+                clearDict();
+            }
+            else if (counts > 0) {
+                if (saveCnt % 500 == 0) {
+                    saveDict('append', objectID);
+                    saveCnt = 0;
+                }
+                saveCnt++;
+                counts = counts - 1;
+                appendData(socket, data);
+
+            }
+            else if (counts == 0) {
+                counts = counts - 1;
+                saveDict('append', objectID);
+                window.app.log("Finished Recording");
+                clearDict();
+            }
+            updateHeader(data);
+            storeData(data);
+            sessionStorage.cnt = parseInt(sessionStorage.cnt) + 1;
+        });
+
+        socket.on('objectID', function (id) {
+            console.log(id);
+            objectID = id;
+        })
+
+    </script>
+
+</head>
+
+<body>
+
+
+    <div id="app">
+        <b-navbar type="dark" variant="dark">
+            <b-navbar-nav>
+                <!-- Navbar dropdowns -->
+                <b-navbar-nav>
+                    <b-nav-item href="/home">Home</b-nav-item>
+                    <b-nav-item href="/graphs">Graphs</b-nav-item>
+                    <b-nav-item href="/gd">Google Drive</b-nav-item>
+                </b-navbar-nav>
+
+            </b-navbar-nav>
+        </b-navbar>
+
+
+        <b-container>
+            <b-jumbotron header="ControlPanel" lead="Node.js control panel for PPMS and SR860 Lock-in">
+                <hr class="my-4">
+            </b-jumbotron>
+        </b-container>
+
+
+        <b-container class="data-row">
+            <b-row class="text-center">
+                <b-col style="white-space:nowrap">
+                    <h4>Temperature: <span id='temp-header'></span></h4>
+                    <h4>Vx1: <span id='Vx1-header'></span></h4>
+                    <h4>Vx2: <span id='Vx2-header'></span></h4>
+                </b-col>
+                <b-col style="white-space:nowrap">
+                    <h4>Temperature State: <span id='temp_state-header'></span></h4>
+                    <h4>Vy1: <span id='Vy1-header'></span></h4>
+                    <h4>Vy2: <span id='Vy2-header'></span></h4>
+                </b-col>
+                <b-col style="white-space:nowrap">
+                    <h4>Field: <span id='field-header'></span></h4>
+                    <h4>Frequency1: <span id='freq1-header'></span></h4>
+                    <h4>Frequency2: <span id='freq2-header'></span></h4>
+                </b-col>
+                <b-col style="white-space:nowrap">
+                    <h4>Field State: <span id='field_state-header'></span></h4>
+                    <h4>Theta1: <span id='theta1-header'></span></h4>
+                    <h4>Theta2: <span id='theta2-header'></span></h4>
+                </b-col>
+            </b-row>
+        </b-container>
+
+        <b-container class="record-input">
+            <hr class="my-4">
+            <div>
+                <h2>Record</h2>
             </div>
+            <div>
+                <b-form>
+                    <b-input-group class="record-inputs">
+                        <b-form-input id="record-time" v-model="time" type="text" placeholder="HH:mm:ss" required>
+                        </b-form-input>
+                        <b-input-group-append>
+                            <b-button-group>
+                                <b-button @click="onStart" variant="outline-success">Start</b-button>
+                                <b-button @click="onStop" variant="outline-danger">Stop</b-button>
+                            </b-button-group>
+                        </b-input-group-append>
+                    </b-input-group>
+                </b-form>
+            </div>
+        </b-container>
 
-                <script>
-                    window.app = new Vue({
-                        el: '#app',
-                        data: {
-                        name: '',
-                        time: '',
-                        },
-                        methods: {
-                            log(message) {
-                                var item = document.createElement('li');
-                                const now = new Date();
-                                item.textContent = ['[', now.toUTCString() ,'] ', message].join('');
-                                messages.appendChild(item);
-                            },
-                            onStart(event) {
-                                event.preventDefault()
-                                socket.emit('record', this.time);
-                                const myTime = this.time.split(":");
-                                this.log(`Recording data for ${myTime[0]} hour(s) ${myTime[1]} minute(s) ${myTime[2]} second(s)`);
-                                start_recording = true;
-                            },
-                            onStop(event) {
-                                event.preventDefault()
-                                socket.emit('stop-record', this.time)
-                                this.log(`Stopped recording...`);
-                                stop_recording = true;
-                            }
-                        },
-                        computed: {
-                        showAlert() {
-                            return this.name.length > 4 ? true : false
-                        }
-                        }
-                    })
-                </script>
-                
-                
-        </body>
+        <b-container class="record-input">
+            <div>
+                <hr class="my-4">
+                <h2>Log</h2>
+                <ul style="list-style-type:none;" id='messages'></ul>
+            </div>
+        </b-container>
+    </div>
+
+    <script>
+        window.app = new Vue({
+            el: '#app',
+            data: {
+                name: '',
+                time: '',
+            },
+            methods: {
+                log(message) {
+                    var item = document.createElement('li');
+                    const now = new Date();
+                    item.textContent = ['[', now.toUTCString(), '] ', message].join('');
+                    messages.appendChild(item);
+                },
+                onStart(event) {
+                    event.preventDefault()
+                    socket.emit('record', this.time);
+                    const myTime = this.time.split(":");
+                    this.log(`Recording data for ${myTime[0]} hour(s) ${myTime[1]} minute(s) ${myTime[2]} second(s)`);
+                    start_recording = true;
+                },
+                onStop(event) {
+                    event.preventDefault()
+                    socket.emit('stop-record', this.time)
+                    this.log(`Stopped recording...`);
+                    stop_recording = true;
+                }
+            },
+            computed: {
+                showAlert() {
+                    return this.name.length > 4 ? true : false
+                }
+            }
+        })
+    </script>
+
+
+</body>
+
 </html>
