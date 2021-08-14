@@ -8,6 +8,7 @@ const io = require("socket.io")(http);
 const StreamData = require("./models/streamData");
 const { Parser } = require("json2csv");
 const { google } = require("googleapis");
+const record = require("./record.js");
 
 // Connect to mongoDB
 const dbURI =
@@ -95,35 +96,74 @@ mongoose
 var myData;
 var filter;
 var mongoData;
+var opt;
+var datapacket = {
+  data: [],
+  id: "",
+};
 
 async function getData() {
   myData = await data.getData();
 }
 
-// mongoose and mongo
-io.on("connection", function (socket) {
-  socket.on("new", function (dict) {
-    const stream = new StreamData(dict);
+function writeToDatabase(option, datapacket) {
+  if (option == 0) {
+    const stream = new StreamData(datapacket);
     stream
       .save()
       .then((result) => {
         //returns the objectID for append and update function
-        io.emit("objectID", result.id);
+        io.emit("started-recording", result.id);
+        datapacket["id"] = result.id;
       })
       .catch((err) => {
         console.log(err);
       });
-  });
-  socket.on("append", function (datapacket) {
-    filter = datapacket.id;
-    console.log(datapacket.id);
-    StreamData.findByIdAndUpdate(filter, datapacket)
+  } else if (option == 1 || option == 3) {
+    console.log(datapacket["data"]);
+    StreamData.findByIdAndUpdate(datapacket["id"], datapacket)
       .then((result) => {
         // console.log(result)
       })
       .catch((err) => {
         console.log(err);
       });
+    io.emit("stopped-recording", option);
+  }
+}
+
+// mongoose and mongo
+io.on("connection", function (socket) {
+  // socket.on("new", function (dict) {
+  //   const stream = new StreamData(dict);
+  //   stream
+  //     .save()
+  //     .then((result) => {
+  //       //returns the objectID for append and update function
+  //       io.emit("objectID", result.id);
+  //       objectID = result.id;
+  //     })
+  //     .catch((err) => {
+  //       console.log(err);
+  //     });
+  // });
+  // socket.on("append", function (datapacket) {
+  //   filter = datapacket.id;
+  //   console.log(datapacket.id);
+  //   StreamData.findByIdAndUpdate(filter, datapacket)
+  //     .then((result) => {
+  //       // console.log(result)
+  //     })
+  //     .catch((err) => {
+  //       console.log(err);
+  //     });
+  // });
+  socket.on("datapacket", function (data) {
+    datapacket["data"] = data;
+  });
+
+  socket.on("record-state", function (state) {
+    record.set_state(state);
   });
 
   socket.on("token", function (token) {
@@ -195,5 +235,8 @@ setInterval(function () {
   getData();
   // send it to all connected clients
   io.emit("data", myData);
+  opt = record.recording();
+  writeToDatabase(opt, datapacket);
+
   // console.log('Last updated: ' + new Date());
 }, 1000);
