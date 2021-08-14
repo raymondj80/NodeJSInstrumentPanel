@@ -1,25 +1,23 @@
 var saveCnt = 0;
-var dataDict = {
-  data: [],
-  id: "",
-};
+// var dataDict = {
+//   data: [],
+//   id: "",
+// };
 
-function appendData(socket, data) {
-  for (var key of Object.keys(dataDict)) {
-    if (key != "id") {
-      dataDict[key].push(data);
-    }
-  }
-}
+// function appendData(socket, data) {
+//   for (var key of Object.keys(dataDict)) {
+//     if (key != "id") {
+//       dataDict[key].push(data);
+//     }
+//   }
+// }
 
-function saveDict(action, id) {
+function saveDict(action, id, data) {
   if (action === "new") {
-    socket.emit("new", dataDict);
-    console.log("data emitted!");
+    socket.emit("new", data);
   } else if (action === "append") {
     dataDict["id"] = id;
-    socket.emit("append", dataDict);
-    console.log("data emitted!");
+    socket.emit("append", data);
   } else {
     socket.emit("");
   }

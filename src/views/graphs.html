@@ -18,8 +18,7 @@
     <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
     <script src='/socket.io/socket.io.js'></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/0.9.90/jsrender.min.js"></script>
-    <script type="text/javascript" src="/update.js"></script>
+    <script src="https:/cdnjs.cloudflare.com/ajax/libs/jsrender/0.9.90/jsrender.min.js"></script>
 </head>
 
 <body>
@@ -38,28 +37,48 @@
             </b-navbar-nav>
         </b-navbar>
         <b-container>
-            <b-jumbotron header="Graphs" lead="Plotly graphs for PPMS and SR860 Lock-in">
-                <hr class="my-4">
-            </b-jumbotron>
-            <div style="display: inline-block;">
-                <b-form-select v-model="chartOptions[0].selectedX" :options="chartOptions[0].optionsX"
-                    @change="updateGraph"></b-form-select>
-                <b-form-select v-model="chartOptions[0].selectedY" :options="chartOptions[0].optionsY"
-                    @change="updateGraph"></b-form-select>
-                <b-form-select v-model="chartOptions[1].selectedX" :options="chartOptions[1].optionsX"
-                    @change="updateGraph"></b-form-select>
-                <b-form-select v-model="chartOptions[1].selectedY" :options="chartOptions[1].optionsY"
-                    @change="updateGraph"></b-form-select>
-                <b-form-select v-model="chartOptions[2].selectedX" :options="chartOptions[2].optionsX"
-                    @change="updateGraph"></b-form-select>
-                <b-form-select v-model="chartOptions[2].selectedY" :options="chartOptions[2].optionsY"
-                    @change="updateGraph"></b-form-select>
-                <b-form-select v-model="chartOptions[3].selectedX" :options="chartOptions[3].optionsX"
-                    @change="updateGraph"></b-form-select>
-                <b-form-select v-model="chartOptions[3].selectedY" :options="chartOptions[3].optionsY"
-                    @change="updateGraph"></b-form-select>
-            </div>
+
+            <b-col style="white-space:nowrap">
+                <b-jumbotron header="Graphs" lead="Chart.js graphs for PPMS and SR860 Lock-in"></b-jumbotron>
+                <b-button variant="outline-danger" @click="resetGraph">Reset</b-button>
+            </b-col>
         </b-container>
+        <hr class="my-4">
+
+        </b-jumbotron>
+        <b-container class="data-row">
+            <b-row class="text-center">
+                <b-col style="white-space:nowrap">
+                    <h5>Chart 1</h5>
+                    <b-form-select v-model="chartOptions[0].selectedX" :options="chartOptions[0].optionsX"
+                        @change="updateGraph"></b-form-select>
+                    <b-form-select v-model="chartOptions[0].selectedY" :options="chartOptions[0].optionsY"
+                        @change="updateGraph"></b-form-select>
+                </b-col>
+                <b-col style="white-space:nowrap">
+                    <h5>Chart 2</h5>
+                    <b-form-select v-model="chartOptions[1].selectedX" :options="chartOptions[1].optionsX"
+                        @change="updateGraph"></b-form-select>
+                    <b-form-select v-model="chartOptions[1].selectedY" :options="chartOptions[1].optionsY"
+                        @change="updateGraph"></b-form-select>
+                </b-col>
+                <b-col style="white-space:nowrap">
+                    <h5>Chart 3</h5>
+                    <b-form-select v-model="chartOptions[2].selectedX" :options="chartOptions[2].optionsX"
+                        @change="updateGraph"></b-form-select>
+                    <b-form-select v-model="chartOptions[2].selectedY" :options="chartOptions[2].optionsY"
+                        @change="updateGraph"></b-form-select>
+                </b-col>
+                <b-col style="white-space:nowrap">
+                    <h5>Chart 4</h5>
+                    <b-form-select v-model="chartOptions[3].selectedX" :options="chartOptions[3].optionsX"
+                        @change="updateGraph"></b-form-select>
+                    <b-form-select v-model="chartOptions[3].selectedY" :options="chartOptions[3].optionsY"
+                        @change="updateGraph"></b-form-select>
+                </b-col>
+            </b-row>
+        </b-container>
+
     </div>
 
     <div id="chart-container1" style="height:20vh; width:100%; padding:20px">
@@ -116,6 +135,14 @@
                         legend: {
                             display: false
                         },
+                        title: {
+                            display: true,
+                            text: 'Chart ' + (parseInt(i) + 1),
+                            padding: {
+                                top: 10,
+                                bottom: 30
+                            }
+                        }
                     },
                     parsing: {
                         xAxisKey: 'time',
@@ -128,7 +155,7 @@
     </script>
     <script>
         var socket = io();
-        var resetGraph = false;
+        var resetGraph = [false, false, false, false];
         const graphOptions = ['time', 'temp', 'field', 'Vx1', 'Vy1', 'freq1', 'Vx2', 'Vy2', 'freq2'];
         if (sessionStorage.streamData === undefined) {
             sessionStorage.setItem('streamData', JSON.stringify([]))
@@ -140,7 +167,7 @@
         function storeData(data) {
             prevData = JSON.parse(sessionStorage.streamData)
             if (prevData.length > 500) {
-                resetGraph = true;
+                resetGraph = [true, true, true, true];
                 sessionStorage.streamData = JSON.stringify([]);
                 prevData = JSON.parse(sessionStorage.streamData);
                 sessionStorage.cnt = '0';
@@ -152,7 +179,7 @@
 
         function instantiateChartOptions() {
             var chart_opt = []
-            for (var i in [...Array(4)]) {
+            for (var i in [...Array(4).keys()]) {
                 chart_opt.push(new Object({
                     selectedX: null,
                     selectedY: null,
@@ -167,7 +194,7 @@
             return chart_opt
         }
 
-        function renderGraph(chart, dataDictStr, axisX, axisY) {
+        function renderGraph(chart, dataDictStr, axisX, axisY, chart_index) {
             dataDict = JSON.parse(dataDictStr);
 
             chart.data.datasets[0].data = dataDict;
@@ -179,11 +206,14 @@
             // specific options for axisX = time
             if (axisX === 'time') {
                 chart.options.showLine = true;
-                if (resetGraph === true) {
-                    chart.options.scales.x.max = 20;
-                    resetGraph = false;
+                if (resetGraph[chart_index] === true) {
+                    chart.options.scales.x.max = 1;
+                    resetGraph[chart_index] = false;
                 } else {
-                    chart.options.scales.x.max = parseInt(sessionStorage.cnt);
+                    if (sessionStorage.cnt > 1) {
+                        chart.options.scales.x.max = parseInt(sessionStorage.cnt);
+                    }
+
                 }
             } else {
                 chart.options.scales.x.max = null;
@@ -210,13 +240,17 @@
             methods: {
                 updateGraph(chart_ind) {
                     // check if chartOptions has been instantiated
-                    if (this.chartOptions != undefined) {
+                    if (this.chartOptions[chart_ind] != undefined) {
                         if (this.chartOptions[chart_ind].selectedX != null && this.chartOptions[chart_ind].selectedY != null) {
-                            renderGraph(chartArray[chart_ind], sessionStorage.streamData, this.chartOptions[chart_ind].selectedX, this.chartOptions[chart_ind].selectedY);
+                            renderGraph(chartArray[chart_ind], sessionStorage.streamData, this.chartOptions[chart_ind].selectedX, this.chartOptions[chart_ind].selectedY, chart_ind);
                         }
                     }
                 },
-
+                resetGraph() {
+                    sessionStorage.setItem('streamData', JSON.stringify([]));
+                    sessionStorage.cnt = '0';
+                    resetGraph = [true, true, true, true];
+                }
             },
             data: {
                 chartOptions: instantiateChartOptions()

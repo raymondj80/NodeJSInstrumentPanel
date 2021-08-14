@@ -114,10 +114,10 @@ io.on("connection", function (socket) {
         console.log(err);
       });
   });
-  socket.on("append", function (data) {
-    filter = data.id;
-    console.log(data);
-    StreamData.findByIdAndUpdate(filter, data)
+  socket.on("append", function (datapacket) {
+    filter = datapacket.id;
+    console.log(datapacket.id);
+    StreamData.findByIdAndUpdate(filter, datapacket)
       .then((result) => {
         // console.log(result)
       })
@@ -186,11 +186,11 @@ app.get(
   }
 );
 
-app.get("/update.js", function (req, res) {
-  res.sendFile(__dirname + "/update.js");
+app.get("/record.js", function (req, res) {
+  res.sendFile(__dirname + "/record.js");
 });
 
-// // retrieve temp data on set interval
+// retrieve temp data on set interval
 setInterval(function () {
   getData();
   // send it to all connected clients

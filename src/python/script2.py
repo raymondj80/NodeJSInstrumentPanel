@@ -118,19 +118,19 @@ except:
 try:
     LI2 = SR860(TCPIP2)
     lockin_json2 = {
-        "Vx1": LI2.vx,
-        "Vy1": LI2.vy,
-        "freq1": LI2.frequency,
-        "theta1": LI2.theta
+        "Vx2": LI2.vx,
+        "Vy2": LI2.vy,
+        "freq2": LI2.frequency,
+        "theta2": LI2.theta
     }
     LI2.close()
 
 except:
     lockin_json2 = {
-        "Vx1": None,
-        "Vy1": None,
-        "freq1": None,
-        "theta1": None
+        "Vx2": None,
+        "Vy2": None,
+        "freq2": None,
+        "theta2": None
     }
 
 my_QD = QDInstrument('DYNACOOL')

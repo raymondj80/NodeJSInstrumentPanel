@@ -21,33 +21,29 @@
     <script src='/socket.io/socket.io.js'></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/0.9.90/jsrender.min.js"></script>
-    <script type="text/javascript" src="/record.js"></script>
+    <script type="text/javascript" src="/update.js"></script>
 
     <script>
+        var cnt = 0;
         var socket = io();
-        if (sessionStorage.objectID === undefined) {
-            sessionStorage.setItem('objectID', '')
-        }
+        var start_recording = false;
+        var stop_recording = false;
+        var counts = -1;
+        var saveCnt = 0;
+        var countup = 0;
+        var sampleRate = 1; // 1 sample/second
+        var objectID = '';
         if (sessionStorage.streamData === undefined) {
             sessionStorage.setItem('streamData', JSON.stringify([]))
         }
         if (sessionStorage.cnt === undefined) {
             sessionStorage.setItem('cnt', '0');
         }
-        if (sessionStorage.start_recording === undefined) {
-            sessionStorage.setItem('start_recording', 'false');
-        }
-        if (sessionStorage.stop_recording === undefined) {
-            sessionStorage.setItem('stop_recording', 'false');
-        }
 
         function storeData(data) {
             prevData = JSON.parse(sessionStorage.streamData)
-            if (prevData.length > 500) {
-                resetGraph = [true, true, true, true];
-                sessionStorage.streamData = JSON.stringify([]);
-                prevData = JSON.parse(sessionStorage.streamData);
-                sessionStorage.cnt = '0';
+            if (prevData.length > 20) {
+                prevData.shift();
             }
             data['time'] = parseInt(sessionStorage.cnt);
             prevData.push(data);
@@ -71,45 +67,35 @@
 
         // On packet recieved update header/record functions
         socket.on('data', function (data) {
-            var opt = recording(sessionStorage.objectID, JSON.parse(sessionStorage.streamData));
-            if (opt === 0) {
-                t = window.app.time.split(":");
-                window.app.log(`Recording data for ${t[0]} hour(s) ${t[1]} minute(s) ${t[2]} second(s)`);
-            } else if (opt === 1) {
-                sessionStorage.stop_recording = 'false';
-                window.app.log('Stopped Recording...')
-            } else if (opt === 3) {
-                sessionStorage.stop_recording = 'false';
-                window.app.log('Finished Recording')
+            var t = window.app.time.split(':');
+
+            if (start_recording) {
+                counts = Math.round((+t[0]) * 60 * 60 + (+t[1]) * 60 + (+t[2]) / sampleRate);
+                saveDict('new', objectID);
+                start_recording = false;
             }
+            else if (stop_recording) {
+                counts = -1;
+                saveDict('append', objectID);
+                stop_recording = false;
+                clearDict();
+            }
+            else if (counts > 0) {
+                if (saveCnt % 500 == 0) {
+                    saveDict('append', objectID);
+                    saveCnt = 0;
+                }
+                saveCnt++;
+                counts = counts - 1;
+                appendData(socket, data);
 
-            // if (start_recording) {
-            //     counts = Math.round((+t[0]) * 60 * 60 + (+t[1]) * 60 + (+t[2]) / sampleRate);
-            //     saveDict('new', objectID);
-            //     start_recording = false;
-            // }
-            // else if (stop_recording) {
-            //     counts = -1;
-            //     saveDict('append', objectID);
-            //     stop_recording = false;
-            //     clearDict();
-            // }
-            // else if (counts > 0) {
-            //     if (saveCnt % 500 == 0) {
-            //         saveDict('append', objectID);
-            //         saveCnt = 0;
-            //     }
-            //     saveCnt++;
-            //     counts = counts - 1;
-            //     appendData(socket, data);
-
-            // }
-            // else if (counts == 0) {
-            //     counts = counts - 1;
-            //     saveDict('append', objectID);
-            //     window.app.log("Finished Recording");
-            //     clearDict();
-            // }
+            }
+            else if (counts == 0) {
+                counts = counts - 1;
+                saveDict('append', objectID);
+                window.app.log("Finished Recording");
+                clearDict();
+            }
             updateHeader(data);
             storeData(data);
             sessionStorage.cnt = parseInt(sessionStorage.cnt) + 1;
@@ -117,7 +103,7 @@
 
         socket.on('objectID', function (id) {
             console.log(id);
-            sessionStorage.objectID = id;
+            objectID = id;
         })
 
     </script>
@@ -219,16 +205,16 @@
                 },
                 onStart(event) {
                     event.preventDefault()
-                    sessionStorage.start_recording = 'true';
-                    sessionStorage.streamData = JSON.stringify([]);
-                    set_state(this.time.split(':'), JSON.parse(sessionStorage.start_recording), JSON.parse(sessionStorage.stop_recording));
+                    socket.emit('record', this.time);
+                    const myTime = this.time.split(":");
+                    this.log(`Recording data for ${myTime[0]} hour(s) ${myTime[1]} minute(s) ${myTime[2]} second(s)`);
+                    start_recording = true;
                 },
                 onStop(event) {
                     event.preventDefault()
-                    sessionStorage.stop_recording = 'true';
-                    sessionStorage.start_recording = 'true';
-                    console.log('Stopping')
-                    set_state(this.time.split(':'), JSON.parse(sessionStorage.start_recording), JSON.parse(sessionStorage.stop_recording));
+                    socket.emit('stop-record', this.time)
+                    this.log(`Stopped recording...`);
+                    stop_recording = true;
                 }
             },
             computed: {
