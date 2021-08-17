@@ -134,30 +134,6 @@ function writeToDatabase(option, datapacket) {
 
 // mongoose and mongo
 io.on("connection", function (socket) {
-  // socket.on("new", function (dict) {
-  //   const stream = new StreamData(dict);
-  //   stream
-  //     .save()
-  //     .then((result) => {
-  //       //returns the objectID for append and update function
-  //       io.emit("objectID", result.id);
-  //       objectID = result.id;
-  //     })
-  //     .catch((err) => {
-  //       console.log(err);
-  //     });
-  // });
-  // socket.on("append", function (datapacket) {
-  //   filter = datapacket.id;
-  //   console.log(datapacket.id);
-  //   StreamData.findByIdAndUpdate(filter, datapacket)
-  //     .then((result) => {
-  //       // console.log(result)
-  //     })
-  //     .catch((err) => {
-  //       console.log(err);
-  //     });
-  // });
   socket.on("datapacket", function (data) {
     datapacket["data"] = data;
   });
@@ -226,8 +202,8 @@ app.get(
   }
 );
 
-app.get("/record.js", function (req, res) {
-  res.sendFile(__dirname + "/record.js");
+app.get("/chartjs-plugin.js", function (req, res) {
+  res.sendFile(__dirname + "/charts/chartjs-plugin-zoom.min.js");
 });
 
 // retrieve temp data on set interval
