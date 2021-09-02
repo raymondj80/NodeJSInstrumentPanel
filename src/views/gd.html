@@ -18,7 +18,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/0.9.90/jsrender.min.js"></script>
-    <script type="text/javascript" src="/update.js"></script>
     <script type="text/javascript" src="https://apis.google.com/js/api.js?onload=loadPicker"></script>
     <script type="text/javascript">
         var developerKey = 'AIzaSyDWpKfzB9fTS16iTBg0FqT7_kRr0fq0rRI';
@@ -30,17 +29,8 @@
         var pickerApiLoaded = false;
         var oauthToken;
         var socket = io();
-        var graphData = {
-            'temp': [],
-            'Vx1': [],
-            'Vy1': [],
-            'field': [],
-            'freq1': [],
-            'freq2': [],
-            'theta1': [],
-            'theta2': [],
-            'time': [],
-        }
+        var graphData;
+        const graphOptions = ['time', 'temp', 'field', 'Vx1', 'Vy1', 'freq1', 'Vx2', 'Vy2', 'freq2'];
 
         // Use the Google API Loader script to load the google.picker script.
         function loadPicker() {
@@ -98,23 +88,38 @@
             }
         }
 
-        function parseData(jsondata, dataDict) {
-            jsondata.forEach(dict => {
-                for (const s of Object.keys(graphData)) {
-                    dataDict[s].push(dict[s]);
-                }
+        // function parseData(jsondata, dataDict) {
+        //     jsondata.forEach(dict => {
+        //         for (const s of Object.keys(graphData)) {
+        //             dataDict[s].push(dict[s]);
+        //         }
 
-            })
-            dataDict.time = [...Array(dataDict.temp.length).keys()];
-            return dataDict;
-        }
+        //     })
+        //     dataDict.time = [...Array(dataDict.temp.length).keys()];
+        //     return dataDict;
+        // }
 
-        function renderGraph(chart, dataDict, axisX, axisY) {
-            chart.data.datasets[0].data = dataDict[axisY];
-            chart.data.labels = dataDict[axisX];
+
+        function renderGraph(chart, mongoData, axisX, axisY, chartOptions) {
+            chart.data.datasets[0].data = mongoData;
+            chart.options.parsing.xAxisKey = axisX;
+            chart.options.parsing.yAxisKey = axisY;
             chart.options.scales.y.title.text = axisY;
             chart.options.scales.x.title.text = axisX;
-
+            if (axisX === 'time') {
+                chart.options.showLine = true;
+            }
+            chart.options.elements.line.borderColor = chartOptions["lineColor"];
+            chart.options.elements.line.borderWidth = chartOptions["lineWidth"];
+            chart.options.elements.point.backgroundColor = chartOptions["pointColor"];
+            chart.options.elements.point.radius = chartOptions["pointRadius"];
+            chart.options.elements.point.pointStyle = chartOptions["pointStyle"];
+            chart.options.elements.line.fill = chartOptions["lineStyle"].includes("filled");
+            if (chartOptions["lineStyle"].includes("dashed")) {
+                chart.options.elements.line.borderDash = [5, 5];
+            } else {
+                chart.options.elements.line.borderDash = [0, 0];
+            }
             chart.update();
         }
 
@@ -124,10 +129,11 @@
             window.app.toggleVueAlert();
         })
 
-        socket.on("mongoData", function (mongoData) {
-            console.log(mongoData);
-            const reformatData = parseData(mongoData, graphData);
-            renderGraph(myChart, graphData, 'time', 'temp');
+        socket.on("mongoData", function (data) {
+            var settingOptions = JSON.parse(sessionStorage.settingOptions);
+            console.log(data);
+            graphData = data;
+            renderGraph(myChart, graphData, window.app.selectedX, window.app.selectedY, settingOptions);
         })
     </script>
 </head>
@@ -175,13 +181,18 @@
             data: {
                 datasets: [{
                     data: [],
-                    fill: false,
-                    borderColor: 'rgb(75, 192, 192)',
-                    tension: 0.1
                 }],
-                labels: []
             },
             options: {
+                elements: {
+                    line: {
+
+                    },
+                    point: {
+
+                    }
+                },
+                showLine: false,
                 scales: {
                     y: {
                         title: {
@@ -189,31 +200,62 @@
                         }
                     },
                     x: {
+                        type: 'linear',
                         title: {
                             display: true
-                        }
+                        },
+                        position: 'bottom',
                     }
                 },
                 plugins: {
                     legend: {
                         display: false
-                    }
+                    },
+                    title: {
+                        display: true,
+                        // text: 'Chart ' + (parseInt(i) + 1),
+                        padding: {
+                            top: 10,
+                            bottom: 30
+                        }
+                    },
+                    // zoom: {
+                    //     pan: {
+                    //         enabled: true,
+                    //     },
+                    //     zoom: {
+                    //         wheel: {
+                    //             enabled: true,
+                    //         },
+                    //         pinch: {
+                    //             enabled: true
+                    //         },
+                    //         mode: 'xy',
+                    //     }
+                    // }
+                },
+                parsing: {
+                    xAxisKey: 'time',
+                    yAxisKey: 'temp'
                 }
-            }
-        })
+            },
+        });
     </script>
     <script>
         window.app = new Vue({
             el: '#app',
+            mounted() {
+
+            },
             data: {
                 name: '',
                 filename: '',
                 folderid: '',
                 toggleVue: false,
-                selectedX: null,
-                selectedY: null,
-                optionsX: [{ value: null, text: 'Select X Axis' }].concat(Object.keys(graphData).map(function (e) { return { value: e, text: e } })),
-                optionsY: [{ value: null, text: 'Select Y Axis' }].concat(Object.keys(graphData).map(function (e) { return { value: e, text: e } }))
+                selectedX: 'time',
+                selectedY: 'temp',
+                optionsX: [{ value: null, text: 'Select X Axis' }].concat(graphOptions.map(function (e) { return { value: e, text: e } })),
+                optionsY: [{ value: null, text: 'Select Y Axis' }].concat(graphOptions.map(function (e) { return { value: e, text: e } }))
             },
             methods: {
                 onExport(event) {
@@ -225,10 +267,8 @@
                 },
                 updateGraph() {
                     if (this.selectedX != null && this.selectedY != null) {
-                        console.log("update");
-                        renderGraph(myChart, graphData, this.selectedX, this.selectedY);
-                    } else {
-                        console.log("don't update");
+                        var settingOptions = JSON.parse(sessionStorage.settingOptions);
+                        renderGraph(myChart, graphData, this.selectedX, this.selectedY, settingOptions);
                     }
                 },
             },

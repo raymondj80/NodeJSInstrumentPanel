@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 const streamSchema = new Schema(
   {
-    data: [
+    record_data: [
       {
         temp: Number,
         temp_state: String,

@@ -9,6 +9,7 @@ const StreamData = require("./models/streamData");
 const { Parser } = require("json2csv");
 const { google } = require("googleapis");
 const record = require("./record.js");
+const { spawn } = require("child_process");
 
 // Connect to mongoDB
 const dbURI =
@@ -94,19 +95,22 @@ mongoose
 
 // Global variable to store temp data
 var myData;
-var filter;
 var mongoData;
 var opt;
 var datapacket = {
-  data: [],
+  record_data: [],
+  stream_data: [],
   id: "",
 };
+var counttotime = 0;
+var time = 0;
 
 async function getData() {
   myData = await data.getData();
 }
 
-function writeToDatabase(option, datapacket) {
+function writeToDatabase(option, datapacket, livedata) {
+  livedata["time"] = time;
   if (option == 0) {
     const stream = new StreamData(datapacket);
     stream
@@ -114,28 +118,79 @@ function writeToDatabase(option, datapacket) {
       .then((result) => {
         //returns the objectID for append and update function
         io.emit("started-recording", result.id);
+        // reset datapacket dictionary
+        time = 0;
+        livedata["time"] = time;
         datapacket["id"] = result.id;
+        datapacket["record_data"].push(livedata);
+        io.emit("datapacket", datapacket["record_data"]);
+        time += 1;
       })
       .catch((err) => {
         console.log(err);
       });
+  } else if (option == 2) {
+    datapacket["record_data"].push(livedata);
+    io.emit("datapacket", datapacket["record_data"]);
+    time += 1;
   } else if (option == 1 || option == 3) {
-    console.log(datapacket["data"]);
+    console.log(datapacket["record_data"]);
     StreamData.findByIdAndUpdate(datapacket["id"], datapacket)
       .then((result) => {
-        // console.log(result)
+        time = 0;
+        datapacket["record_data"] = [];
+        datapacket["stream_data"] = [];
       })
       .catch((err) => {
         console.log(err);
       });
     io.emit("stopped-recording", option);
+  } else {
+    datapacket["stream_data"].push(livedata);
+    io.emit("datapacket", datapacket["stream_data"]);
+    time += 1;
   }
 }
 
 // mongoose and mongo
 io.on("connection", function (socket) {
-  socket.on("datapacket", function (data) {
-    datapacket["data"] = data;
+  // const python = spawn("python", ["./python/functions.py", "Patrick"]);
+  // python.stdout.on("data", function (data) {
+  //   NewData = data.toString();
+  //   console.log(NewData);
+  // });
+  // socket.on("order", function (order) {
+  //   // data.getData2();
+  //   var Data = null;
+  //   return Promise.resolve().then((v) => {
+  //     const process = spawn("python", ["./python/functions.py"]);
+  //     process.stdout.on("data", function (data) {
+  //       jsonData = JSON.parse(data.toString());
+  //     });
+  //     try {
+  //       Data = jsonData;
+  //     } catch (error) {
+  //       // console.log("error");
+  //     }
+  //     return Data;
+  //   });
+  // });
+
+  socket.on("order", function (arg) {
+    // console.log(arg);
+    const python = spawn("python", ["./python/script3.py", arg]);
+    python.stdout.on("data", function (data) {
+      NewData = data.toString();
+      console.log("This is" + NewData);
+    });
+  });
+
+  // socket.on("datapacket", function (data) {
+  //   datapacket["data"] = data;
+  // });
+  socket.on("reset-stream-data", () => {
+    datapacket["stream_data"] = [];
+    time = 0;
   });
 
   socket.on("record-state", function (state) {
@@ -165,19 +220,33 @@ io.on("connection", function (socket) {
     ];
     const transforms = [];
     const json2csvParser = new Parser({ fields, transforms });
-    const csv = json2csvParser.parse(mongoData);
-    fs.writeFile(`data/${filename}.csv`, csv, (err) => {
-      if (err) console.log(err);
-      else {
-        authenticate(CRED_PATH, TOKEN_PATH, uploadFile, filename, folderid);
-      }
-    });
-    // io.emit("mongoData", mongoData);
+    console.log(mongoData);
+    if (mongoData != null) {
+      const csv = json2csvParser.parse(mongoData);
+      fs.writeFile(`data/${filename}.csv`, csv, (err) => {
+        if (err) console.log(err);
+        else {
+          authenticate(CRED_PATH, TOKEN_PATH, uploadFile, filename, folderid);
+        }
+      });
+    }
   });
+});
+
+app.get("/signup", function (req, res) {
+  res.sendFile(__dirname + "/views/signup.html");
+});
+
+app.get("/login", function (req, res) {
+  res.sendFile(__dirname + "/views/login.html");
 });
 
 app.get("/home", function (req, res) {
   res.sendFile(__dirname + "/views/home.html");
+});
+
+app.get("/index", function (req, res) {
+  res.sendFile(__dirname + "/views/index.html");
 });
 
 app.get("/graphs", function (req, res) {
@@ -188,22 +257,26 @@ app.get(
   "/gd",
   async function (req, res, next) {
     res.sendFile(__dirname + "/views/gd.html");
-    await sleep(250);
+    await sleep(500);
     next();
   },
   function (req, res, next) {
-    if (filter != null) {
-      StreamData.findById(filter).then((res) => {
-        mongoData = res.toJSON().data;
+    if (datapacket["id"] != null) {
+      StreamData.findById(datapacket["id"]).then((res) => {
+        mongoData = res.toJSON().record_data;
+        console.log(mongoData);
         io.emit("mongoData", mongoData);
-        console.log("mongoData emitted");
       });
     }
   }
 );
 
 app.get("/chartjs-plugin.js", function (req, res) {
-  res.sendFile(__dirname + "/charts/chartjs-plugin-zoom.min.js");
+  res.sendFile(__dirname + "/plugins/chartjs-plugin-zoom.min.js");
+});
+
+app.get("/vue-color.min.js", function (req, res) {
+  res.sendFile(__dirname + "/plugins/vue-color.min.js");
 });
 
 // retrieve temp data on set interval
@@ -212,7 +285,9 @@ setInterval(function () {
   // send it to all connected clients
   io.emit("data", myData);
   opt = record.recording();
-  writeToDatabase(opt, datapacket);
+  if (myData != undefined) {
+    writeToDatabase(opt, datapacket, myData);
+  }
 
   // console.log('Last updated: ' + new Date());
 }, 1000);

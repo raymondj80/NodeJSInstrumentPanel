@@ -40,9 +40,8 @@
             sessionStorage.setItem('recording', 'false');
         }
         if (sessionStorage.logHtml === undefined) {
-            sessionStorage.setItem('logHtml', '');
+            sessionStorage.setItem('logHtml', "<ul id=\'messages\' style=\'list-style-type: none;\'></ul>");
         }
-
 
         function storeData(data) {
             prevData = JSON.parse(sessionStorage.streamData)
@@ -133,7 +132,7 @@
 
     #function_buttons {
         padding-left: 5%;
-        margin-bottom: -180%;
+        margin-bottom: -200%;
     }
 
     .function_button {
@@ -165,7 +164,13 @@
     }
 
     #error_div {
-        display: block;
+        display: none;
+        margin-right: 76%;
+        margin-left: 3%;
+        border: 3px solid red;
+        background-color: black;
+        color: red;
+        text-align: center;
     }
 </style>
 <!-- End of New Additions -->
@@ -219,15 +224,12 @@
         <b-container>
             <hr class="my-4">
             <div>
-                <h2>Functions</h2>
+                <h2>Orders</h2>
             </div>
             <div>
-                <!-- <b-button v-b-modal.modal-xl variant="primary">xl modal</b-button> -->
-                <b-button v-b-modal.modal-lg variant="primary">Select Functions</b-button>
-                <!-- <b-button v-b-modal.modal-sm variant="primary">sm modal</b-button> -->
-
-                <!-- <b-modal id="modal-xl" size="xl" title="Extra Large Modal">Hello Extra Large Modal!</b-modal> -->
-                <b-modal id="modal-lg" size="lg" title="Select Functions (This does not actually work yet!)">
+                <b-button v-b-modal.modal-lg variant="primary" @click="display_function_div_container()">Send Orders
+                </b-button>
+                <b-modal id="modal-lg" size="lg" title="Send Orders" hide-header-close>
                     <div>
 
                         <div id="function_button_container">
@@ -235,7 +237,7 @@
                                 <b-button onclick="display_function_div('temp_Div')" class="my-4 function_button">Ramp
                                     to Temperature</b-button>
                                 <br>
-                                <b-button onclick="display_function_div('mag_Div')" class="my-4 function_button">Change
+                                <b-button onclick="display_function_div('mag_Div')" class="my-4 function_button">Apply
                                     Magnetic Field</b-button>
                                 <br>
                                 <b-button class="my-4 function_button">Function 3 that does <br> a thing </b-button>
@@ -257,10 +259,9 @@
                                 <b-button class="my-4 function_button">Function 11</b-button>
                             </div>
                         </div>
-                        <!-- <b-button onclick = "display_function_div('temp_Div')">Ramp to Temperature</b-button> -->
                         <div id="temp_Div" class="func_Div">
                             <form id="temp_form" name="temp_form">
-                                <div class="top-func-div" id="test_id">
+                                <div class="top-func-div">
                                     <label for="target_temp"><strong>Target Temperature:</strong></label>
                                     <input id="target_temp" name="target_temp" type="text">
                                 </div>
@@ -282,7 +283,6 @@
                             </form>
                         </div>
                         <br>
-                        <!-- <b-button onclick = "display_function_div('mag_Div')" class = "my-4 function_button"  >Change Magnetic Field</b-button> -->
                         <div id="mag_Div" class="func_Div">
                             <form id="mag_form" name="mag_form">
                                 <div class="top-func-div">
@@ -325,15 +325,14 @@
                     <template #modal-footer="{ ok, cancel, hide }">
                         <b>Submit</b>
                         <!-- Emulate built in modal footer ok and cancel button actions -->
-                        <b-button size="sm" variant="primary" @click="ok();onSubmit_order()">
+                        <b-button size="sm" variant="primary" @click="ok(); onSubmit_order()">
                             OK
                         </b-button>
-                        <b-button size="sm" variant="danger" @click="cancel()">
+                        <b-button size="sm" variant="danger" @click="cancel(); hide_function_div_container()">
                             Cancel
                         </b-button>
                     </template>
                 </b-modal>
-                <!-- <b-modal id="modal-sm" size="sm" title="Small Modal">Hello Small Modal!</b-modal> -->
             </div>
         </b-container>
         <!-- End of New Additions -->
@@ -359,16 +358,20 @@
             </div>
         </b-container>
 
-        <b-container class="record-input">
+        <b-container class="record-input2">
+            <hr class="my-4">
             <div>
-                <hr class="my-4">
-                <h2>Log</h2>
-                <ul style="list-style-type:none;" id='messages'></ul>
+                <h2 style=" text-align: left; display: inline-block; width: 75%;  margin-right: -50%;">
+                    Log</h2>
+                <div style=" float: right; margin-left: -50%;">
+                    <b-button @click="resetLog" variant="outline-warning">Clear</b-button>
+                </div>
             </div>
+            <ul style="list-style-type:none;" id='messages'></ul>
         </b-container>
     </div>
 
-    <script>
+    <!-- <script>
         //////
         // Swap visibility
         var function_div_list = ["temp_Div", "mag_Div"];
@@ -398,7 +401,7 @@
         // if (X.style.display === "none") {
         //     console.log("I hear you")
         // }
-    </script>
+    </script> -->
 
     <script>
         window.app = new Vue({
@@ -406,16 +409,39 @@
             data: {
                 name: '',
                 time: '',
-                start_recording: false,
-                stop_recording: false,
+                visibilities: {
+                    functions_div: {
+                        'DIV_ON': false,
+                        'error_div': false,
+                        'temp_Div': false,
+                        "mag_Div": false,
+                    },
+                },
                 set_functions: [],
             },
+            mounted: function () {
+                var d = document.getElementById("messages");
+                d.outerHTML = sessionStorage.logHtml;
+            },
             methods: {
+
+                display_function_div_container() {
+                    window.app.visibilities.functions_div["DIV_ON"] = true;
+                },
+                hide_function_div_container() {
+                    window.app.visibilities.functions_div["DIV_ON"] = false;
+                },
                 log(message) {
                     var item = document.createElement('li');
                     const now = new Date();
                     item.textContent = ['[', now.toUTCString(), '] ', message].join('');
                     messages.appendChild(item);
+                    sessionStorage.logHtml = document.getElementById("messages").outerHTML;
+                },
+                resetLog() {
+                    sessionStorage.setItem('logHtml', "<ul id=\'messages\' style=\'list-style-type: none;\'></ul>");
+                    var d = document.getElementById("messages");
+                    d.outerHTML = sessionStorage.logHtml;
                 },
                 onStart(event) {
                     event.preventDefault()
@@ -432,17 +458,23 @@
                     this.stop_recording = false;
                 },
                 onSubmit_order() {
-                    event.preventDefault();
-                    socket.emit('order', this.set_functions);
-                    // console.log(this.set_functions);
-                    //
-                    console.log("I hear you")
-                    this.set_functions = [];
+                    if (this.set_functions.length === 0) {
+                        console.log("error1");
+                    } else if (document.getElementById("error_div").style.display === "block") {
+                        console.log("error2");
+                    } else {
+                        event.preventDefault();
+                        window.app.visibilities.functions_div["DIV_ON"] = false;
+                        var Set_Functions = this.set_functions;
+                        socket.emit('order', this.set_functions);
+                        // console.log(this.set_functions);
+                        //
+                        console.log("Emitting Order")
+                        this.set_functions = '';
+                    }
                 },
                 onSubmit_Temp() {
-                    // console.log("It's working")
                     event.preventDefault();
-                    // console.log(document.getElementsByName("target_temp")[0].value);
                     var item = document.createElement('li');
                     item.style.position = 'relative';
                     item.style.margin = "3px";
@@ -451,43 +483,21 @@
                     var r = document.getElementsByName("temp_rate")[0].value.trim();
                     var m = document.getElementsByName("temp_mode")[0].value.trim();
 
-                    if (!isNaN(t)) {
-                        if (!isNaN(r)) {
-                            if ((t < 1.7 || t > 400) || (r < 0 || r > 10)) {
-                                if (X.style.display === "none") {
-                                    Swap_Visibility('error_div');
+                    if (is_Valid_Number(t, 1.7, 400, 'error_div')) {
+                        if (is_Valid_Number(r, 0, 10, 'error_div')) {
+                            item.textContent = "Ramp to " + t + " Kelvin at " + r + " K/m and " + m + " mode.";
+                            function_log.appendChild(item);
+
+                            this.set_functions.push(
+                                {
+                                    Order: "Ramp_to_temp",
+                                    Temp: t,
+                                    Rate: r,
+                                    Mode: m,
                                 }
-                                console.log("Error");
-                            } else {
-                                if (document.getElementById('error_div').style.display === "block") {
-                                    Swap_Visibility('error_div');
-                                }
-                                item.textContent = "Ramp to " + t + " Kelvin at " + r + " K/m and " + m + " mode.";
-                                function_log.appendChild(item);
-
-                                // this.set_functions = this.set_functions + '/T=' + t + ',r=' + r + ',m=' + m;
-
-                                this.set_functions.push(
-                                    {
-                                        Order: "Ramp_to_temp",
-                                        Temp: t,
-                                        Rate: r,
-                                        Mode: m,
-                                    }
-                                );
-                                socket.emit('order', JSON.parse(this.set_functions))
-                                console.log(this.set_functions);
-                                // console.log("AntiError")
-                            }
+                            );
                         }
-
-                    } else {
-                        if (document.getElementById('error_div').style.display === "none") {
-                            Swap_Visibility('error_div');
-                        }
-                        console.log("Is not a number");
                     }
-
                 },
                 onSubmit_Mag() {
                     event.preventDefault();
@@ -495,46 +505,24 @@
                     item.style.position = 'relative';
                     item.style.margin = '3px';
 
-                    var t = document.getElementsByName("target_mag")[0].value;
-                    var r = document.getElementsByName("mag_rate")[0].value;
-                    var m = document.getElementsByName("mag_mode")[0].value;
+                    var t = document.getElementsByName("target_mag")[0].value.trim();
+                    var r = document.getElementsByName("mag_rate")[0].value.trim();
+                    var m = document.getElementsByName("mag_mode")[0].value.trim();
 
-                    if (!isNaN(t)) {
-                        if (!isNaN(r)) {
-                            if ((t < 0 || t > 9) || (r < 0 || r > 1000)) {
-                                if (document.getElementById('error_div').style.display === 'none') {
-                                    console.log("I'm here")
-                                    Swap_Visibility('error_div');
+                    if (is_Valid_Number(t, 0, 9, 'error_div')) {
+                        if (is_Valid_Number(r, 0, 200, 'error_div')) {
+                            item.textContent = "Apply " + t + " T magnetic field at " + r + " G/m and " + m + ' mode.';
+                            function_log.appendChild(item);
+
+                            this.set_functions.push(
+                                {
+                                    Order: "Ramp_to_mag",
+                                    Mag: t,
+                                    Rate: r,
+                                    Mode: m,
                                 }
-                                console.log("Error");
-                            } else {
-                                if (document.getElementById('error_div').style.display === "block") {
-                                    Swap_Visibility('error_div');
-                                }
-                                item.textContent = "Apply " + t + " T magnetic field at " + r + " G/m and " + m + ' mode.';
-                                function_log.appendChild(item);
-
-                                // this.set_functions = this.set_functions + '/T=' + t + ',r=' + r + ',m=' + m;
-
-                                this.set_functions.push(
-                                    {
-                                        Order: "Ramp_to_mag",
-                                        Temp: t,
-                                        Rate: r,
-                                        Mode: m,
-                                    }
-                                );
-                                // socket.emit('', JSON.parse(this.set_functions))
-                                // console.log(this.set_functions);
-                                console.log("AntiError")
-                            }
+                            );
                         }
-
-                    } else {
-                        if (document.getElementById('error_div').style.display === "none") {
-                            Swap_Visibility('error_div');
-                        }
-                        console.log("Is not a number");
                     }
                 },
 
@@ -545,6 +533,53 @@
                 }
             }
         })
+
+        // Swap visibility
+        var function_div_list = ["temp_Div", "mag_Div"];
+
+        function display_function_div(ID) {
+            if (window.app.visibilities.functions_div["DIV_ON"]) {
+                document.getElementById('error_div').style.display = 'none';
+                for (i = 0; i < function_div_list.length; ++i) {
+                    if (function_div_list[i] === ID) {
+                        Swap_Visibility(ID);
+                    } else {
+                        x = document.getElementById(function_div_list[i]);
+                        x.style.display = "none";
+                    }
+                }
+            }
+        }
+
+        function Swap_Visibility(ID) {
+            var x = document.getElementById(ID);
+            if (x.style.display === "block") {
+                x.style.display = "none";
+            } else {
+                x.style.display = "block";
+            }
+        }
+
+        function is_Valid_Number(num, lower_bound, upper_bound, ERROR_ID) {
+            if (!isNaN(num) && num.length > 0) {
+                if (num < lower_bound || num > upper_bound) {
+                    if (document.getElementById(ERROR_ID).style.display === "none") {
+                        Swap_Visibility(ERROR_ID);
+                    }
+                    return false
+                } else {
+                    if (document.getElementById(ERROR_ID).style.display === "block") {
+                        Swap_Visibility(ERROR_ID);
+                    }
+                    return true
+                }
+            } else {
+                if (document.getElementById(ERROR_ID).style.display === "none") {
+                    Swap_Visibility(ERROR_ID);
+                }
+                return false
+            }
+        }
     </script>
 
 

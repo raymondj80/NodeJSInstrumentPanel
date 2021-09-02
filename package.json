@@ -10,9 +10,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@jjppof/chartjs-plugin-zoom-pan-select": "git+https://github.com/jjppof/chartjs-plugin-zoom-pan-select.git",
     "bootstrap": "^5.0.2",
     "bootstrap-vue": "^2.21.2",
+    "chart.js": "^3.5.0",
+    "chartjs": "^0.3.24",
+    "chartjs-plugin-zoom": "^1.1.1",
     "express": "^4.17.1",
+    "googleapis": "^39.2.0",
     "mongoose": "^5.13.0",
     "socket.io": "^4.1.2",
     "vue": "^2.6.14"
