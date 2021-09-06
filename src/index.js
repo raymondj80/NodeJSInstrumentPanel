@@ -177,11 +177,16 @@ io.on("connection", function (socket) {
   // });
 
   socket.on("order", function (arg) {
-    // console.log(arg);
-    const python = spawn("python", ["./python/script3.py", arg]);
+    Orders = ["./python/script3.py"];
+    for (var i = 0; i < arg.length; i++) {
+      Orders.push(Object.values(arg[i]));
+    }
+    Orders.push(Orders.length);
+    console.log(Orders);
+    const python = spawn("python", Orders);
     python.stdout.on("data", function (data) {
       NewData = data.toString();
-      console.log("This is" + NewData);
+      console.log(NewData);
     });
   });
 
