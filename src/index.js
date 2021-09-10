@@ -119,7 +119,7 @@ function writeToDatabase(option, datapacket, livedata) {
         //returns the objectID for append and update function
         io.emit("started-recording", result.id);
         // reset datapacket dictionary
-        time = 0;
+        time = 1;
         livedata["time"] = time;
         datapacket["id"] = result.id;
         datapacket["record_data"].push(livedata);
