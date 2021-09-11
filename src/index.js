@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 const data = require("./data.js");
 const io = require("socket.io")(http);
 const StreamData = require("./models/streamData");
+const UserData = require("./models/userData.js");
 const { Parser } = require("json2csv");
 const { google } = require("googleapis");
 const record = require("./record.js");
