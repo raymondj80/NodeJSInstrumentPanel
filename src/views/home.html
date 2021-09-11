@@ -21,6 +21,8 @@
     <script src='/socket.io/socket.io.js'></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/0.9.90/jsrender.min.js"></script>
+    <!-- <script src='/views/JS/aesthetic_functions.js'></script> -->
+    <script src='/test.js'></script>
 
     <script>
         var socket = io();
@@ -370,38 +372,6 @@
             <ul style="list-style-type:none;" id='messages'></ul>
         </b-container>
     </div>
-
-    <!-- <script>
-        //////
-        // Swap visibility
-        var function_div_list = ["temp_Div", "mag_Div"];
-
-        function display_function_div(ID) {
-            for (i = 0; i < function_div_list.length; ++i) {
-                if (function_div_list[i] === ID) {
-                    Swap_Visibility(ID);
-                } else {
-                    x = document.getElementById(function_div_list[i]);
-                    x.style.display = "none";
-                }
-            }
-        }
-
-        function Swap_Visibility(ID) {
-            var x = document.getElementById(ID);
-            if (x.style.display === "block") {
-                x.style.display = "none";
-            } else {
-                x.style.display = "block";
-            }
-        }
-
-        X = document.getElementById("error_div");
-
-        // if (X.style.display === "none") {
-        //     console.log("I hear you")
-        // }
-    </script> -->
 
     <script>
         window.app = new Vue({
