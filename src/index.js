@@ -3,10 +3,11 @@ const fs = require("fs");
 const app = require("express")();
 const http = require("http").Server(app);
 const mongoose = require("mongoose");
+const bodyparser = require("body-parser");
 const data = require("./data.js");
 const io = require("socket.io")(http);
 const StreamData = require("./models/streamData");
-const UserData = require("./models/userData.js");
+const User = require("./models/userData.js");
 const { Parser } = require("json2csv");
 const { google } = require("googleapis");
 const record = require("./record.js");
@@ -239,8 +240,59 @@ io.on("connection", function (socket) {
   });
 });
 
+app.use(bodyparser.urlencoded({ extended: false}));
+app.use(bodyparser.json());
+
 app.get("/signup", function (req, res) {
   res.sendFile(__dirname + "/views/signup.html");
+});
+
+app.post("/signup", async (req, res) => {
+  var newUser = new User({
+    username: req.body.username,
+    password: req.body.password,
+    firstname: req.body.firstname,
+    lastname: req.body.lastname,
+    email: req.body.email,
+    groupkey: req.body.groupkey
+  });
+  await newUser
+    .save()
+    .then(() => {
+      var redir = { redirect: '/login'};
+      return res.json(redir);
+    })
+    .catch(err => {
+      console.log("error is ", err.message);
+      var redir = { redirect: '/error'};
+      return res.json(redir);
+    })
+  
+})
+
+app.post("/login", async (req, res) => {
+  var newUser =  {};
+  newUser.email = req.body.email;
+  newUser.password = req.body.password;
+
+  await User.findOne({ email: newUser.email})
+    .then(profile => {
+      if (!profile) {
+        var redir = { redirect: '/error'};
+        return res.json(redir);
+      } else {
+        if (profile.password == newUser.password) {
+          var redir = { redirect: '/home'};
+          return res.json(redir);
+        } else {
+          var redir = { redirect: '/error'};
+          return res.json(redir);
+        }
+      }
+    })
+    .catch(err =>  {
+      console.log("Error is ", err.message);
+    });
 });
 
 app.get("/login", function (req, res) {
@@ -286,14 +338,14 @@ app.get("/vue-color.min.js", function (req, res) {
 });
 
 // retrieve temp data on set interval
-setInterval(function () {
-  getData();
-  // send it to all connected clients
-  io.emit("data", myData);
-  opt = record.recording();
-  if (myData != undefined) {
-    writeToDatabase(opt, datapacket, myData);
-  }
+// setInterval(function () {
+//   getData();
+//   // send it to all connected clients
+//   io.emit("data", myData);
+//   opt = record.recording();
+//   if (myData != undefined) {
+//     writeToDatabase(opt, datapacket, myData);
+//   }
 
-  // console.log('Last updated: ' + new Date());
-}, 1000);
+//   // console.log('Last updated: ' + new Date());
+// }, 1000);
