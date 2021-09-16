@@ -111,16 +111,10 @@
                 <div class="col-md-6" id="login_container">
                     <div class="card px-5 py-5" id="form1">
                         <div class="form-data" v-if="!submitted">
-                            <div class="forms-inputs mb-4"> <span>Username</span> <input autocomplete="off" type="text" v-model="form.username" v-bind:class="{'form-control':true}" >
+                            <div class="forms-inputs mb-4"> <span>Name</span> <input autocomplete="off" type="text" v-model="form.name" v-bind:class="{'form-control':true}">
                             </div>
                             <div class="forms-inputs mb-4"> <span>Email</span> <input autocomplete="off" type="text" v-model="form.email" v-bind:class="{'form-control':true, 'is-invalid' : !validEmail(form.email) && emailBlured}" v-on:blur="emailBlured = true">
                                 <div class="invalid-feedback">A valid email is required!</div>
-                            </div>
-                            <div class="forms-inputs mb-4"> <span>First Name</span> <input autocomplete="off" type="text" v-model="form.firstname" v-bind:class="{'form-control':true, 'is-invalid' : !validFirstName(form.firstname)}">
-                                <div class="invalid-feedback">Please enter a name</div>
-                            </div>
-                            <div class="forms-inputs mb-4"> <span>Last Name</span> <input autocomplete="off" type="text" v-model="form.lastname" v-bind:class="{'form-control':true, 'is-invalid' : !validLastName(form.lastname)}" v-on:blur="last_nameBlured = true">
-                                <div class="invalid-feedback">Please enter a name</div>
                             </div>
                             <div class="forms-inputs mb-4"> <span>Password</span> <input autocomplete="off" type="password" v-model="form.password" v-bind:class="{'form-control':true, 'is-invalid' : !validPassword(form.password) && passwordBlured}" v-on:blur="passwordBlured = true">
                                 <div class="invalid-feedback">Password must be 8 character!</div>
@@ -134,30 +128,23 @@
                             <b-button v-on:click.stop.prevent="submit" block variant="primary" class="btn w-100">Sign Up
                             </b-button>
                         </div>
-                        <!-- <div class="success-data" v-else>
-                            <div class="text-center d-flex flex-column"> <i class='bx bxs-badge-check'></i> <span class="text-center fs-1">You have been logged in <br> Successfully</span> </div>
-                        </div> -->
                     </div>
                 </div>
             </div>
         </div>
     </b-container>
-
     <script>
     var app = new Vue({
         el: '#form1',
         data: {
             emailBlured: false,
-            last_nameBlured: false,
             valid: false,
             submitted: false,
             repass: "",
             passwordBlured: false,
             form: {
-                username: "",
+                name: "",
                 email: "",
-                lastname: "",
-                firstname: "",
                 password: "",
                 groupkey: ""
             }
@@ -170,10 +157,9 @@
                 this.emailBlured = true;
                 this.passwordBlured = true;
                 if (this.validEmail(this.form.email) && this.validPassword(this.form.password)) {
-                    if (this.validLastName(this.form.lastname) && this.validFirstName(this.form.firstname)) {
-                        if (this.validGroupKey(this.form.groupkey)) {
-                            this.valid = true;
-                        }
+                    if (this.validGroupKey(this.form.groupkey)) {
+                        this.valid = true;
+
                     }
                 }
             },
@@ -185,19 +171,6 @@
                     return true;
                 }
             },
-
-            validFirstName: function(first_name) {
-                if (first_name.length > 0) {
-                    return true;
-                }
-            },
-
-            validLastName: function(last_name) {
-                if (last_name.length > 0) {
-                    return true;
-                }
-            },
-
 
             validPassword: function(password) {
                 if (password.length > 7) {
@@ -211,15 +184,11 @@
                 }
             },
 
-
-            /////// Need to talk to Spencer and Raymond about this; Will Be Updated!!!!////
             validGroupKey: function(group_key) {
                 if (group_key.length > 7) {
                     return true;
                 }
             },
-
-            //////////////////////////////////
 
             submit: function() {
                 this.validate();
@@ -227,7 +196,7 @@
                     this.submitted = true;
                     console.log(this.form)
                     axios.post('http://localhost:3000/signup', this.form)
-                        .then(function (response) {
+                        .then(function(response) {
                             if (response.data.redirect == "/") {
                                 window.location = "/signup"
                             } else if (response.data.redirect == '/login') {
