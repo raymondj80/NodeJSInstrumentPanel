@@ -6,7 +6,7 @@ const mongoose = require("mongoose");
 const data = require("./data.js");
 const io = require("socket.io")(http);
 const StreamData = require("./models/streamData");
-const UserData = require("./models/userData.js");
+const User = require("./models/userData.js");
 const { Parser } = require("json2csv");
 const { google } = require("googleapis");
 const record = require("./record.js");
@@ -155,28 +155,6 @@ function writeToDatabase(option, datapacket, livedata) {
 
 // mongoose and mongo
 io.on("connection", function (socket) {
-  // const python = spawn("python", ["./python/functions.py", "Patrick"]);
-  // python.stdout.on("data", function (data) {
-  //   NewData = data.toString();
-  //   console.log(NewData);
-  // });
-  // socket.on("order", function (order) {
-  //   // data.getData2();
-  //   var Data = null;
-  //   return Promise.resolve().then((v) => {
-  //     const process = spawn("python", ["./python/functions.py"]);
-  //     process.stdout.on("data", function (data) {
-  //       jsonData = JSON.parse(data.toString());
-  //     });
-  //     try {
-  //       Data = jsonData;
-  //     } catch (error) {
-  //       // console.log("error");
-  //     }
-  //     return Data;
-  //   });
-  // });
-
   socket.on("order", function (arg) {
     Orders = ["./python/script3.py"];
     for (var i = 0; i < arg.length; i++) {
@@ -239,12 +217,31 @@ io.on("connection", function (socket) {
   });
 });
 
-app.get("/signup", function (req, res) {
-  res.sendFile(__dirname + "/views/signup.html");
+app.post("/register", function (req, res) {
+  // res.sendFile(__dirname + "/views/signup.html");
+  var username = req.body.username;
+  var password = req.body.password;
+  var firstname = req.body.firstname;
+  var lastname = req.body.lastname;
+
+  var newuser = new User();
+  newuser.username = username;
+  newuser.password = password;
+  newuser.firstname = firstname;
+  newuser.lastname = lastname;
+  newuser.save(function (err, saveUser) {
+    if (err) {
+      console.log(err);
+      return res.status(500).send();
+    }
+
+    return res.status(200).send();
+  });
 });
 
 app.get("/login", function (req, res) {
   res.sendFile(__dirname + "/views/login.html");
+  res.redirect("/success");
 });
 
 app.get("/home", function (req, res) {
