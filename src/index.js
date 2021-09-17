@@ -290,29 +290,7 @@ app.post("/signup", async (req, res) => {
 
 })
 
-// app.post("/login", async (req, res) => {
-//     console.log(req.body.email);
-//     await User.findOne({ email: req.body.email }, function(err, user) {
-//             if (user == null) {
-//                 var redir = { redirect: '/error' };
-//                 console.log("Could not find email.")
-//                 return res.json(redir);
-//             } else {
-//                 if (user.validPassword(req.body.password)) {
-//                     var redir = { redirect: '/home' };
-//                     console.log("Authentication Successful");
-//                     return res.json(redir);
-//                 } else {
-//                     var redir = { redirect: '/error' };
-//                     console.log("Incorrect Password")
-//                     return res.json(redir);
-//                 }
-//             }
-//         })
-//         .catch(err => {
-//             console.log("Error is ", err.message);
-//         });
-// });
+
 
 app.post("/login", async (req, res, next) => {
   passport.authenticate('local', {
@@ -364,14 +342,12 @@ app.get("/vue-color.min.js", function(req, res) {
 });
 
 // retrieve temp data on set interval
-// setInterval(function () {
-//   getData();
-//   // send it to all connected clients
-//   io.emit("data", myData);
-//   opt = record.recording();
-//   if (myData != undefined) {
-//     writeToDatabase(opt, datapacket, myData);
-//   }
-
-//   // console.log('Last updated: ' + new Date());
-// }, 1000);
+setInterval(function () {
+  getData();
+  // send it to all connected clients
+  io.emit("data", myData);
+  opt = record.recording();
+  if (myData != undefined) {
+    writeToDatabase(opt, datapacket, myData);
+  }
+}, 1000);

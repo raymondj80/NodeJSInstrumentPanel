@@ -4,8 +4,8 @@
   "description": "node js control panel",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "myScript": "node -e 'require(\"./data\").getTemp()'"
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
   },
   "author": "",
   "license": "ISC",
@@ -16,6 +16,7 @@
     "chart.js": "^3.5.0",
     "chartjs": "^0.3.24",
     "chartjs-plugin-zoom": "^1.1.1",
+    "connect-flash": "^0.1.1",
     "crypto": "^1.0.1",
     "express": "^4.17.1",
     "express-handlebars": "^5.3.3",

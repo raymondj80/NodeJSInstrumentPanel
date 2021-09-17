@@ -195,12 +195,13 @@
                 if (this.valid) {
                     this.submitted = true;
                     console.log(this.form)
-                    axios.post('http://localhost:3000/signup', this.form)
+                    axios.post('http://localhost:3000/users/register', this.form)
                         .then(function(response) {
+                            console.log(response)
                             if (response.data.redirect == "/") {
-                                window.location = "/signup"
+                                window.location.href = "http://localhost:3000/users/register"
                             } else if (response.data.redirect == '/login') {
-                                window.location = "/login"
+                                window.location.href = "http://localhost:3000/users/login"
                             }
                         })
                         .catch(err => {

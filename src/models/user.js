@@ -10,6 +10,10 @@ const userSchema = mongoose.Schema({
     type: String,
     required: true
   },
+  date: {
+    type: Date,
+    default: Date.now
+  },
   hash: String,
   salt: String,
   settings: String,
