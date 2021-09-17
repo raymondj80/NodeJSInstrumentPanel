@@ -191,7 +191,7 @@
                     this.validate();
                     if (this.valid) {
                         this.submitted = true;
-                        socket.emit("new-account", this.new_account);
+                        socket.emit("new-account", this.new);
                     }
                 }
             }

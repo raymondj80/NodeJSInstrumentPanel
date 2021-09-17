@@ -21,11 +21,22 @@
     <script src='/socket.io/socket.io.js'></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/0.9.90/jsrender.min.js"></script>
+    <!-- <script src='/views/JS/aesthetic_functions.js'></script> -->
+    <!-- <script src='test.js'></script> -->
 
     <script>
         var socket = io();
         if (sessionStorage.objectID === undefined) {
             sessionStorage.setItem('objectID', '')
+        }
+        if (sessionStorage.streamData === undefined) {
+            sessionStorage.setItem('streamData', JSON.stringify([]))
+        }
+        if (sessionStorage.recordData === undefined) {
+            sessionStorage.setItem('recordData', JSON.stringify([]))
+        }
+        if (sessionStorage.cnt === undefined) {
+            sessionStorage.setItem('cnt', '0');
         }
         if (sessionStorage.recording === undefined) {
             sessionStorage.setItem('recording', 'false');
@@ -33,6 +44,7 @@
         if (sessionStorage.logHtml === undefined) {
             sessionStorage.setItem('logHtml', "<ul id=\'messages\' style=\'list-style-type: none;\'></ul>");
         }
+
 
         // update headers 
         function updateHeader(data) {
@@ -51,7 +63,7 @@
         // On packet recieved update header/record functions
         socket.on('data', function (data) {
             updateHeader(data);
-            storeData(data);
+            // storeData(data);
             if (JSON.parse(sessionStorage.recording)) {
                 socket.emit("datapacket", JSON.parse(sessionStorage.streamData))
             }
@@ -248,7 +260,7 @@
                                     <input id="temp_rate" name="temp_rate" type="text" placeholder="10.00 K/m">
                                     <label for="temp_mode"><strong>Mode:</strong></label>
                                     <select id="temp_mode" name="temp_mode" type="text">
-                                        <option value="Linear">Linear</option>
+                                        <option value="Fast">Fast</option>
                                         <option value="No Overshoot">No Overshoot</option>
                                         <option value="Sweep">Sweep</option>
                                     </select>
@@ -273,7 +285,6 @@
                                     <label for="mag_mode"><strong>Mode:</strong></label>
                                     <select id="mag_mode" name="mag_mode" type="text">
                                         <option value="Linear">Linear</option>
-                                        <option value="No Overshoot">No Overshoot</option>
                                         <option value="Oscillate">Oscillate</option>
                                     </select>
                                 </div>
@@ -349,38 +360,6 @@
         </b-container>
     </div>
 
-    <!-- <script>
-        //////
-        // Swap visibility
-        var function_div_list = ["temp_Div", "mag_Div"];
-
-        function display_function_div(ID) {
-            for (i = 0; i < function_div_list.length; ++i) {
-                if (function_div_list[i] === ID) {
-                    Swap_Visibility(ID);
-                } else {
-                    x = document.getElementById(function_div_list[i]);
-                    x.style.display = "none";
-                }
-            }
-        }
-
-        function Swap_Visibility(ID) {
-            var x = document.getElementById(ID);
-            if (x.style.display === "block") {
-                x.style.display = "none";
-            } else {
-                x.style.display = "block";
-            }
-        }
-
-        X = document.getElementById("error_div");
-
-        // if (X.style.display === "none") {
-        //     console.log("I hear you")
-        // }
-    </script> -->
-
     <script>
         window.app = new Vue({
             el: '#app',
@@ -424,6 +403,8 @@
                 onStart(event) {
                     event.preventDefault()
                     this.start_recording = true;
+                    sessionStorage.streamData = JSON.stringify([]);
+                    sessionStorage.cnt = '0';
                     socket.emit("record-state", [this.time.split(':'), this.start_recording, this.stop_recording]);
                     this.start_recording = false;
                 },
@@ -446,7 +427,7 @@
                         // console.log(this.set_functions);
                         //
                         console.log("Emitting Order")
-                        this.set_functions = [];
+                        this.set_functions = '';
                     }
                 },
                 onSubmit_Temp() {
