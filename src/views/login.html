@@ -135,61 +135,43 @@
     </b-container>
     <script>
     var app = new Vue({
-        el: '#form1',
-        data: {
-            emailBlured: false,
-            valid: false,
-            submitted: false,
-            passwordBlured: false,
+                el: '#form1',
+                data: {
+                    emailBlured: false,
+                    valid: false,
+                    submitted: false,
+                    passwordBlured: false,
 
-            form: {
-                email: "",
-                password: ""
-            }
+                    form: {
+                        email: "",
+                        password: ""
+                    }
+                },
 
-        },
+                methods: {
 
-        methods: {
+                    validate: function() {
+                        this.emailBlured = true;
+                        this.passwordBlured = true;
+                        if (this.validEmail(this.form.email) && this.validPassword(this.form.password)) {
+                            this.valid = true;
 
-            validate: function() {
-                this.emailBlured = true;
-                this.passwordBlured = true;
-                if (this.validEmail(this.form.email) && this.validPassword(this.form.password)) {
-                    this.valid = true;
-                }
-            },
-
-            validEmail: function(email) {
-
-                var re = /(.+)@(.+){2,}\.(.+){2,}/;
-                if (re.test(email.toLowerCase())) {
-                    return true;
-                }
-
-            },
-
-            validPassword: function(password) {
-                if (password.length > 7) {
-                    return true;
-                }
-            },
-
-            submit: function() {
-                this.validate();
-                if (this.valid) {
-                    this.submitted = true;
-                    console.log(this.form)
-                    axios.post('http://localhost:3000/users/login', this.form)
-                        .then(function (response) {
-                            window.location.href = response.request.responseURL
-                        })
-                        .catch(err => {
-                            console.log(err);
-                        });
-                }
-            }
-        }
-    });
+                            submit: function() {
+                                this.validate();
+                                if (this.valid) {
+                                    this.submitted = true;
+                                    console.log(this.form)
+                                    axios.post('http://localhost:3000/users/login', this.form)
+                                        .then(function(response) {
+                                            window.location.href = response.request.responseURL
+                                        })
+                                        .catch(err => {
+                                            console.log(err);
+                                        });
+                                }
+                            };
+                        };
+                    });
     </script>
 </body>
 
