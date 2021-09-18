@@ -55,13 +55,14 @@
             } */
 
     #login_container {
-        padding-bottom: 10%;
+        padding-bottom: 25%;
         border: 3px solid slategray;
         border-radius: 2%;
+        overflow: auto;
     }
 
     .forms-inputs {
-        position: relative
+        position: relative;
     }
 
     .forms-inputs span {
@@ -102,7 +103,7 @@
     <b-container>
         <div id="top_banner">
             <div>
-                <header>Login to the Control Panel</header>
+                <header>Sign Up for the Control Panel</header>
             </div>
         </div>
         <div class="container mt-5">
@@ -110,23 +111,22 @@
                 <div class="col-md-6" id="login_container">
                     <div class="card px-5 py-5" id="form1">
                         <div class="form-data" v-if="!submitted">
+                            <div class="forms-inputs mb-4"> <span>Name</span> <input autocomplete="off" type="text" v-model="form.name" v-bind:class="{'form-control':true}">
+                            </div>
                             <div class="forms-inputs mb-4"> <span>Email</span> <input autocomplete="off" type="text" v-model="form.email" v-bind:class="{'form-control':true, 'is-invalid' : !validEmail(form.email) && emailBlured}" v-on:blur="emailBlured = true">
                                 <div class="invalid-feedback">A valid email is required!</div>
                             </div>
                             <div class="forms-inputs mb-4"> <span>Password</span> <input autocomplete="off" type="password" v-model="form.password" v-bind:class="{'form-control':true, 'is-invalid' : !validPassword(form.password) && passwordBlured}" v-on:blur="passwordBlured = true">
                                 <div class="invalid-feedback">Password must be 8 character!</div>
                             </div>
-                            <b-button v-on:click.stop.prevent="submit" block variant="primary" class="btn w-100">Login
+                            <div class="forms-inputs mb-4"> <span>Re-type Password</span> <input autocomplete="off" type="password" v-model="repass" v-bind:class="{'form-control':true, 'is-invalid' : !validRePassword(repass,form.password) &&  passwordBlured}" v-on:blur="passwordBlured = true">
+                                <div class="invalid-feedback">Passwords must match!</div>
+                            </div>
+                            <div class="forms-inputs mb-4"> <span>Group Key</span> <input autocomplete="off" type="text" v-model="form.groupkey" v-bind:class="{'form-control':true, 'is-invalid' : !validGroupKey(form.groupkey)}">
+                                <div class="invalid-feedback">Invalid Group Key!</div>
+                            </div>
+                            <b-button v-on:click.stop.prevent="submit" block variant="primary" class="btn w-100">Sign Up
                             </b-button>
-                            <!-- <div class="mb-3"> <button v-on:click.stop.prevent="submit" class="btn btn-dark w-100">Login</button> </div> -->
-                        </div>
-                        <div class="success-data" v-else>
-                            <div class="text-center d-flex flex-column"> <i class='bx bxs-badge-check'></i> <span class="text-center fs-1">You have been logged in <br> Successfully</span> </div>
-                        </div>
-                        <div>
-                            <br>
-                            <p style="margin-left: 48%"> or </p>
-                            <b-button block variant="warning" class="btn w-100" href="/users/register">Sign Up </b-button>
                         </div>
                     </div>
                 </div>
@@ -137,23 +137,30 @@
     var app = new Vue({
         el: '#form1',
         data: {
-            new_account: {
+            emailBlured: false,
+            valid: false,
+            submitted: false,
+            repass: "",
+            passwordBlured: false,
+            form: {
+                name: "",
                 email: "",
-                emailBlured: false,
-                valid: false,
-                submitted: false,
                 password: "",
-                passwordBlured: false
+                groupkey: ""
             }
         },
 
         methods: {
 
             validate: function() {
+                this.last_nameBlured = true;
                 this.emailBlured = true;
                 this.passwordBlured = true;
-                if (this.validEmail(this.email) && this.validPassword(this.password)) {
-                    this.valid = true;
+                if (this.validEmail(this.form.email) && this.validPassword(this.form.password)) {
+                    if (this.validGroupKey(this.form.groupkey)) {
+                        this.valid = true;
+
+                    }
                 }
             },
 
@@ -163,7 +170,6 @@
                 if (re.test(email.toLowerCase())) {
                     return true;
                 }
-
             },
 
             validPassword: function(password) {
@@ -172,22 +178,38 @@
                 }
             },
 
+            validRePassword: function(repass, password) {
+                if (repass === password) {
+                    return true;
+                }
+            },
+
+            validGroupKey: function(group_key) {
+                if (group_key.length > 7) {
+                    return true;
+                }
+            },
 
             submit: function() {
                 this.validate();
                 if (this.valid) {
                     this.submitted = true;
                     console.log(this.form)
-                    axios.post('http://localhost:3000/users/login', this.form)
+                    axios.post('http://localhost:3000/users/register', this.form)
                         .then(function(response) {
-                            window.location.href = response.request.responseURL
+                            console.log(response)
+                            if (response.data.redirect == "/") {
+                                window.location.href = "http://localhost:3000/users/register"
+                            } else if (response.data.redirect == '/login') {
+                                window.location.href = "http://localhost:3000/users/login"
+                            }
                         })
                         .catch(err => {
                             console.log(err);
                         });
                 }
-            };
-        };
+            }
+        }
     });
     </script>
 </body>

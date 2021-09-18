@@ -25,9 +25,8 @@ function getData2(arg) {
     });
     try {
       Data = jsonData;
-    } catch (error) {
-      console.log("error");
-    }
+    } catch (error) {}
+
     return Data;
   });
 }

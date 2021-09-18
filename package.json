@@ -4,21 +4,28 @@
   "description": "node js control panel",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "myScript": "node -e 'require(\"./data\").getTemp()'"
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@jjppof/chartjs-plugin-zoom-pan-select": "git+https://github.com/jjppof/chartjs-plugin-zoom-pan-select.git",
+    "body-parser": "^1.19.0",
     "bootstrap": "^5.0.2",
     "bootstrap-vue": "^2.21.2",
     "chart.js": "^3.5.0",
     "chartjs": "^0.3.24",
     "chartjs-plugin-zoom": "^1.1.1",
+    "connect-flash": "^0.1.1",
+    "crypto": "^1.0.1",
     "express": "^4.17.1",
+    "express-handlebars": "^5.3.3",
+    "express-session": "^1.17.2",
     "googleapis": "^39.2.0",
+    "json2csv": "^5.0.6",
     "mongoose": "^5.13.0",
+    "passport": "^0.4.1",
+    "passport-local": "^1.0.0",
     "socket.io": "^4.1.2",
     "vue": "^2.6.14"
   },

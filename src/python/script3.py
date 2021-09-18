@@ -53,7 +53,7 @@ class QDInstrument:
 
     def set_temperature(self, temperature, rate, mode=0):
         """Sets temperature and returns MultiVu error code"""
-        err = self._mvu.SetTemperature(temperature, rate, mode)
+        err = self._mvu.SetTemperature(temperature = temperature, rate = rate, mode = mode, wait = True)
 
     def set_field(self, field, rate=100, approach=0, mode=0):
         """Sets field and returns MultiVu error code"""
@@ -64,6 +64,12 @@ my_QD = QDInstrument('DYNACOOL')
 for i in range(1,int(sys.argv[-1])):
     order, value, rate, mode = sys.argv[i].split(',')
     if order == 'Ramp_to_temp':
-        my_QD.set_temperature(value, rate, modeDict[mode])
+        my_QD.set_temperature(temperature = value, rate = rate, mode = modeDict[mode])
     elif order == 'Ramp_to_mag':
+<<<<<<< HEAD
         my_QD.set_field(value, rate, modeDict[mode], 0)
+=======
+        my_QD.set_field(field = value, rate = rate, mode = modeDict[mode])
+
+    
+>>>>>>> da8b409438dd6a2cc3d985a4d68019b14c028b4c

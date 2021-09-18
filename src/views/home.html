@@ -22,8 +22,13 @@
     <script src='/socket.io/socket.io.js'></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/0.9.90/jsrender.min.js"></script>
+<<<<<<< HEAD
     <script src='static/JS/aesthetic_functions.js?features'></script>
 
+=======
+    <!-- <script src='/views/JS/aesthetic_functions.js'></script> -->
+    <!-- <script src='test.js'></script> -->
+>>>>>>> da8b409438dd6a2cc3d985a4d68019b14c028b4c
 
     <script>
         var socket = io();
@@ -46,6 +51,7 @@
             sessionStorage.setItem('logHtml', "<ul id=\'messages\' style=\'list-style-type: none;\'></ul>");
         }
 
+<<<<<<< HEAD
         function storeData(data) {
             prevData = JSON.parse(sessionStorage.streamData)
             if (prevData.length > 500) {
@@ -62,6 +68,31 @@
         // On packet recieved update header/record functions
         socket.on('data', function (data) {
             work_with_data(data);
+=======
+
+        // update headers 
+        function updateHeader(data) {
+            for (var key in data) {
+                // console.log(key);
+                if (typeof data[key] === "number") {
+                    // round to 9 decimal places
+                    document.getElementById(key.concat('-header')).innerHTML = data[key].toFixed(9);
+                }
+                else {
+                    document.getElementById(key.concat('-header')).innerHTML = data[key];
+                }
+            };
+        };
+
+        // On packet recieved update header/record functions
+        socket.on('data', function (data) {
+            updateHeader(data);
+            // storeData(data);
+            if (JSON.parse(sessionStorage.recording)) {
+                socket.emit("datapacket", JSON.parse(sessionStorage.streamData))
+            }
+            sessionStorage.cnt = parseInt(sessionStorage.cnt) + 1;
+>>>>>>> da8b409438dd6a2cc3d985a4d68019b14c028b4c
         });
 
         socket.on('started-recording', function (id) {
