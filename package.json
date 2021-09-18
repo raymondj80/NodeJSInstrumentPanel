@@ -4,8 +4,13 @@
   "description": "node js control panel",
   "main": "index.js",
   "scripts": {
+<<<<<<< HEAD
     "start": "node src/app.js",
     "dev": "nodemon src/app.js"
+=======
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+>>>>>>> da8b409438dd6a2cc3d985a4d68019b14c028b4c
   },
   "author": "",
   "license": "ISC",

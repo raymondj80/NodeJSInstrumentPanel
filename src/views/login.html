@@ -110,6 +110,7 @@
                 <div class="col-md-6" id="login_container">
                     <div class="card px-5 py-5" id="form1">
                         <div class="form-data" v-if="!submitted">
+<<<<<<< HEAD
                             <div class="forms-inputs mb-4"> <span>Email</span> <input autocomplete="off" type="text"
                                     v-model="form.email"
                                     v-bind:class="{'form-control':true, 'is-invalid' : !validEmail(form.email) && emailBlured}"
@@ -120,6 +121,12 @@
                                     type="password" v-model="form.password"
                                     v-bind:class="{'form-control':true, 'is-invalid' : !validPassword(form.password) && passwordBlured}"
                                     v-on:blur="passwordBlured = true">
+=======
+                            <div class="forms-inputs mb-4"> <span>Email</span> <input autocomplete="off" type="text" v-model="form.email" v-bind:class="{'form-control':true, 'is-invalid' : !validEmail(form.email) && emailBlured}" v-on:blur="emailBlured = true">
+                                <div class="invalid-feedback">A valid email is required!</div>
+                            </div>
+                            <div class="forms-inputs mb-4"> <span>Password</span> <input autocomplete="off" type="password" v-model="form.password" v-bind:class="{'form-control':true, 'is-invalid' : !validPassword(form.password) && passwordBlured}" v-on:blur="passwordBlured = true">
+>>>>>>> da8b409438dd6a2cc3d985a4d68019b14c028b4c
                                 <div class="invalid-feedback">Password must be 8 character!</div>
                             </div>
                             <b-button v-on:click.stop.prevent="submit" block variant="primary" class="btn w-100">Login
@@ -127,14 +134,17 @@
                             <!-- <div class="mb-3"> <button v-on:click.stop.prevent="submit" class="btn btn-dark w-100">Login</button> </div> -->
                         </div>
                         <div class="success-data" v-else>
-                            <div class="text-center d-flex flex-column"> <i class='bx bxs-badge-check'></i> <span
-                                    class="text-center fs-1">You have been logged in <br> Successfully</span> </div>
+                            <div class="text-center d-flex flex-column"> <i class='bx bxs-badge-check'></i> <span class="text-center fs-1">You have been logged in <br> Successfully</span> </div>
                         </div>
                         <div>
                             <br>
                             <p style="margin-left: 48%"> or </p>
+<<<<<<< HEAD
                             <b-button block variant="warning" class="btn w-100" href="/users/register">Sign Up
                             </b-button>
+=======
+                            <b-button block variant="warning" class="btn w-100" href="/users/register">Sign Up </b-button>
+>>>>>>> da8b409438dd6a2cc3d985a4d68019b14c028b4c
                         </div>
                     </div>
                 </div>
@@ -142,6 +152,7 @@
         </div>
     </b-container>
     <script>
+<<<<<<< HEAD
         var app = new Vue({
             el: '#form1',
             data: {
@@ -171,15 +182,48 @@
                     if (re.test(email.toLowerCase())) {
                         return true;
                     }
+=======
+    var app = new Vue({
+        el: '#form1',
+        data: {
+            new_account: {
+                email: "",
+                emailBlured: false,
+                valid: false,
+                submitted: false,
+                password: "",
+                passwordBlured: false
+            }
+        },
 
-                },
+        methods: {
 
-                validPassword: function (password) {
-                    if (password.length > 7) {
-                        return true;
-                    }
-                },
+            validate: function() {
+                this.emailBlured = true;
+                this.passwordBlured = true;
+                if (this.validEmail(this.email) && this.validPassword(this.password)) {
+                    this.valid = true;
+                }
+            },
 
+            validEmail: function(email) {
+
+                var re = /(.+)@(.+){2,}\.(.+){2,}/;
+                if (re.test(email.toLowerCase())) {
+                    return true;
+                }
+
+            },
+>>>>>>> da8b409438dd6a2cc3d985a4d68019b14c028b4c
+
+            validPassword: function(password) {
+                if (password.length > 7) {
+                    return true;
+                }
+            },
+
+
+<<<<<<< HEAD
                 submit: function () {
                     this.validate();
                     if (this.valid) {
@@ -193,9 +237,24 @@
                                 console.log(err);
                             });
                     }
+=======
+            submit: function() {
+                this.validate();
+                if (this.valid) {
+                    this.submitted = true;
+                    console.log(this.form)
+                    axios.post('http://localhost:3000/users/login', this.form)
+                        .then(function(response) {
+                            window.location.href = response.request.responseURL
+                        })
+                        .catch(err => {
+                            console.log(err);
+                        });
+>>>>>>> da8b409438dd6a2cc3d985a4d68019b14c028b4c
                 }
-            }
-        });
+            };
+        };
+    });
     </script>
 </body>
 

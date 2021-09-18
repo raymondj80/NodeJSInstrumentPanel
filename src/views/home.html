@@ -64,6 +64,12 @@
         socket.on('data', function (data) {
             updateHeader(data);
             // storeData(data);
+<<<<<<< HEAD
+=======
+            if (JSON.parse(sessionStorage.recording)) {
+                socket.emit("datapacket", JSON.parse(sessionStorage.streamData))
+            }
+>>>>>>> da8b409438dd6a2cc3d985a4d68019b14c028b4c
             sessionStorage.cnt = parseInt(sessionStorage.cnt) + 1;
         });
 
