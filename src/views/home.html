@@ -10,7 +10,6 @@
     <!-- Required Stylesheets -->
     <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css" />
     <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css" />
-    <link type="text/css" rel="stylesheet" href="static/CSS/home_style.css" />
 
     <!-- Load polyfills to support older browsers -->
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es2015%2CIntersectionObserver"></script>
@@ -22,13 +21,8 @@
     <script src='/socket.io/socket.io.js'></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/0.9.90/jsrender.min.js"></script>
-<<<<<<< HEAD
-    <script src='static/JS/aesthetic_functions.js?features'></script>
-
-=======
     <!-- <script src='/views/JS/aesthetic_functions.js'></script> -->
     <!-- <script src='test.js'></script> -->
->>>>>>> da8b409438dd6a2cc3d985a4d68019b14c028b4c
 
     <script>
         var socket = io();
@@ -51,24 +45,6 @@
             sessionStorage.setItem('logHtml', "<ul id=\'messages\' style=\'list-style-type: none;\'></ul>");
         }
 
-<<<<<<< HEAD
-        function storeData(data) {
-            prevData = JSON.parse(sessionStorage.streamData)
-            if (prevData.length > 500) {
-                resetGraph = [true, true, true, true];
-                sessionStorage.streamData = JSON.stringify([]);
-                prevData = JSON.parse(sessionStorage.streamData);
-                sessionStorage.cnt = '0';
-            }
-            data['time'] = parseInt(sessionStorage.cnt);
-            prevData.push(data);
-            sessionStorage.streamData = JSON.stringify(prevData);
-        }
-
-        // On packet recieved update header/record functions
-        socket.on('data', function (data) {
-            work_with_data(data);
-=======
 
         // update headers 
         function updateHeader(data) {
@@ -88,26 +64,32 @@
         socket.on('data', function (data) {
             updateHeader(data);
             // storeData(data);
-            if (JSON.parse(sessionStorage.recording)) {
-                socket.emit("datapacket", JSON.parse(sessionStorage.streamData))
-            }
             sessionStorage.cnt = parseInt(sessionStorage.cnt) + 1;
->>>>>>> da8b409438dd6a2cc3d985a4d68019b14c028b4c
         });
 
         socket.on('started-recording', function (id) {
-            start_recording(id)
+            sessionStorage.objectID = id;
+            sessionStorage.recording = 'true';
+            t = window.app.time.split(":");
+            window.app.log(`Recording data for ${t[0]} hour(s) ${t[1]} minute(s) ${t[2]} second(s)`);
         })
 
         socket.on('stopped-recording', function (opt) {
-            stop_recording(opt)
+            if (opt == 1) {
+                sessionStorage.recording = 'false';
+                window.app.log('Stopped Recording...')
+            }
+            else {
+                sessionStorage.recording = 'false';
+                window.app.log('Finished Recording')
+            }
         })
     </script>
 </head>
 
 <!-- New Additions -->
 <style>
-    /* .func_Div {
+    .func_Div {
         position: absolute;
         top: 5%;
         display: none;
@@ -175,7 +157,7 @@
         background-color: black;
         color: red;
         text-align: center;
-    } */
+    }
 </style>
 <!-- End of New Additions -->
 
@@ -506,6 +488,52 @@
             }
         })
 
+        // Swap visibility
+        var function_div_list = ["temp_Div", "mag_Div"];
+
+        function display_function_div(ID) {
+            if (window.app.visibilities.functions_div["DIV_ON"]) {
+                document.getElementById('error_div').style.display = 'none';
+                for (i = 0; i < function_div_list.length; ++i) {
+                    if (function_div_list[i] === ID) {
+                        Swap_Visibility(ID);
+                    } else {
+                        x = document.getElementById(function_div_list[i]);
+                        x.style.display = "none";
+                    }
+                }
+            }
+        }
+
+        function Swap_Visibility(ID) {
+            var x = document.getElementById(ID);
+            if (x.style.display === "block") {
+                x.style.display = "none";
+            } else {
+                x.style.display = "block";
+            }
+        }
+
+        function is_Valid_Number(num, lower_bound, upper_bound, ERROR_ID) {
+            if (!isNaN(num) && num.length > 0) {
+                if (num < lower_bound || num > upper_bound) {
+                    if (document.getElementById(ERROR_ID).style.display === "none") {
+                        Swap_Visibility(ERROR_ID);
+                    }
+                    return false
+                } else {
+                    if (document.getElementById(ERROR_ID).style.display === "block") {
+                        Swap_Visibility(ERROR_ID);
+                    }
+                    return true
+                }
+            } else {
+                if (document.getElementById(ERROR_ID).style.display === "none") {
+                    Swap_Visibility(ERROR_ID);
+                }
+                return false
+            }
+        }
     </script>
 
 

@@ -290,6 +290,7 @@ app.get("/vue-color.min.js", function (req, res) {
 setInterval(function () {
   getData();
   // send it to all connected clients
+  console.log(myData);
   io.emit("data", myData);
   opt = record.recording();
   if (myData != undefined) {
