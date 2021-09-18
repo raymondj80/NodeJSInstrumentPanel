@@ -1,5 +1,6 @@
 // imports
 const fs = require("fs");
+const express = require("express");
 const app = require("express")();
 const http = require("http").Server(app);
 const mongoose = require("mongoose");
@@ -232,6 +233,8 @@ io.on("connection", function (socket) {
     }
   });
 });
+app.use("/static", express.static("./static/"));
+// app.use(express.static("JS"));
 
 app.get("/signup", function (req, res) {
   res.sendFile(__dirname + "/views/signup.html");
