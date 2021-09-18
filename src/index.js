@@ -84,10 +84,14 @@ function sleep(ms) {
 }
 
 mongoose
-  .connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .connect(dbURI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false,
+    useCreateIndex: true,
+  })
   .then((result) =>
     http.listen(3000, function () {
-      mongoose.set("useFindAndModify", false);
       console.log("HTTP server started on port 3000");
     })
   )
@@ -261,7 +265,7 @@ app.get(
     next();
   },
   function (req, res, next) {
-    if (datapacket["id"] != null) {
+    if (datapacket["id"] != "") {
       StreamData.findById(datapacket["id"]).then((res) => {
         mongoData = res.toJSON().record_data;
         console.log(mongoData);

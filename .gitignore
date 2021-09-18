@@ -1,5 +1,4 @@
 src/secrets/**
-src/config/**
 src/data/**
 .DS_Store
 node_modules/**

@@ -52,7 +52,7 @@ class QDInstrument:
 
     def set_temperature(self, temperature, rate, mode=0):
         """Sets temperature and returns MultiVu error code"""
-        err = self._mvu.SetTemperature(temperature = temperature, rate = rate, mode = mode, wait = Ture)
+        err = self._mvu.SetTemperature(temperature = temperature, rate = rate, mode = mode, wait = True)
 
     def set_field(self, field, rate=100, approach=0, mode=0):
         """Sets field and returns MultiVu error code"""
