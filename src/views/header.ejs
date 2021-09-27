@@ -1,0 +1,85 @@
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+
+    <!-- Style sheet -->
+    <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css"
+        integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous" />
+
+    <!-- Required scripts -->
+    <script src="https://unpkg.com/vue@latest/dist/vue.js"></script>
+    <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.1.0.min.js"></script>
+    <script src="https://cdn.socket.io/4.2.0/socket.io.min.js" integrity="sha384-PiBR5S00EtOj2Lto9Uu81cmoyZqR57XcOna1oAuVuIEjzj0wpqDVfD0JA9eXlRsj" crossorigin="anonymous"></script>    
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
+        integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
+        integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+        crossorigin="anonymous"></script>
+    <script>
+        var socket = io();
+        if (sessionStorage.objectID === undefined) {
+            sessionStorage.setItem('objectID', '')
+        }
+        if (sessionStorage.streamData === undefined) {
+            sessionStorage.setItem('streamData', JSON.stringify([]))
+        }
+        if (sessionStorage.recordData === undefined) {
+            sessionStorage.setItem('recordData', JSON.stringify([]))
+        }
+        if (sessionStorage.cnt === undefined) {
+            sessionStorage.setItem('cnt', '0');
+        }
+        if (sessionStorage.recording === undefined) {
+            sessionStorage.setItem('recording', 'false');
+        }
+        if (sessionStorage.logHtml === undefined) {
+            sessionStorage.setItem('logHtml', "<ul id=\'messages\' style=\'list-style-type: none;\'></ul>");
+        }
+
+        // update headers 
+        function updateHeader(data) {
+            for (var key in data) {
+                // console.log(key);
+                if (typeof data[key] === "number") {
+                    // round to 9 decimal places
+                    document.getElementById(key.concat('-header')).innerHTML = data[key].toFixed(9);
+                }
+                else {
+                    document.getElementById(key.concat('-header')).innerHTML = data[key];
+                }
+            };
+        };
+
+        // On packet recieved update header/record functions
+        socket.on('data', function (data) {
+            updateHeader(data);
+            // storeData(data);
+            sessionStorage.cnt = parseInt(sessionStorage.cnt) + 1;
+        });
+
+        socket.on('started-recording', function (id) {
+            sessionStorage.objectID = id;
+            sessionStorage.recording = 'true';
+            t = window.app.time.split(":");
+            window.app.log(`Recording data for ${t[0]} hour(s) ${t[1]} minute(s) ${t[2]} second(s)`);
+        })
+
+        socket.on('stopped-recording', function (opt) {
+            if (opt == 1) {
+                sessionStorage.recording = 'false';
+                window.app.log('Stopped Recording...')
+            }
+            else {
+                sessionStorage.recording = 'false';
+                window.app.log('Finished Recording')
+            }
+        })
+    </script>
+</head>

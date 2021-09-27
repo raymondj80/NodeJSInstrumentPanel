@@ -3,9 +3,10 @@ const router = express.Router();
 const passport = require("passport");
 const path = require("path");
 
+const { ensureAuthenticated, forwardAuthenticated } = require("../config/auth");
+
 // User model
 const User = require("../models/user");
-const { forwardAuthenticated } = require("../config/auth");
 
 // Login Page
 router.get("/login", forwardAuthenticated, (req, res) => res.render("login"));
