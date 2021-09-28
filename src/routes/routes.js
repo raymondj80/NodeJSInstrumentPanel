@@ -8,9 +8,13 @@ const { ensureAuthenticated, forwardAuthenticated } = require("../config/auth");
 
 router.get("/", forwardAuthenticated, (req, res) => res.render("welcome"));
 
-router.get("/home", ensureAuthenticated, (req, res) => res.render("home"));
+router.get("/home", ensureAuthenticated, (req, res) =>
+  res.render("home", { user: req.user })
+);
 
-router.get("/graphs", ensureAuthenticated, (req, res) => res.render("graphs"));
+router.get("/graphs", ensureAuthenticated, (req, res) =>
+  res.render("graphs", { user: req.user })
+);
 
 function sleep(ms) {
   return new Promise((resolve) => {
@@ -25,22 +29,24 @@ var getData = function (req, res, next) {
     });
   }
   next();
-}
+};
 
-router.get("/gd", ensureAuthenticated, getData, (req, res) => res.render("gd", {data : res.locals.data}));
+router.get("/gd", ensureAuthenticated, getData, (req, res) =>
+  res.render("gd", { data: res.locals.data, user: req.user })
+);
 
 // router.get(
 //   "/gd",
-  
-  // function (req, res, next) {
-  //   if (datapacket["id"] != null) {
-  //     StreamData.findById(datapacket["id"]).then((res) => {
-  //       mongoData = res.toJSON().record_data;
-  //       console.log(mongoData);
-  //       io.emit("mongoData", mongoData);
-  //     });
-  //   }
-  // }
+
+// function (req, res, next) {
+//   if (datapacket["id"] != null) {
+//     StreamData.findById(datapacket["id"]).then((res) => {
+//       mongoData = res.toJSON().record_data;
+//       console.log(mongoData);
+//       io.emit("mongoData", mongoData);
+//     });
+//   }
+// }
 // );
 
 router.get("/chartjs-plugin.js", function (req, res) {

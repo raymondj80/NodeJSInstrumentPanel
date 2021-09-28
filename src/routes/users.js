@@ -1,9 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const passport = require("passport");
-const path = require("path");
 
-const { ensureAuthenticated, forwardAuthenticated } = require("../config/auth");
+const { forwardAuthenticated } = require("../config/auth");
 
 // User model
 const User = require("../models/user");
@@ -74,6 +73,7 @@ router.post("/login", (req, res, next) => {
   passport.authenticate("local", {
     successRedirect: "/home",
     failureRedirect: "/users/login",
+    failureFlash: true,
   })(req, res, next);
 });
 

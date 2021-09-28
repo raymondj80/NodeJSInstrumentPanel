@@ -3,6 +3,12 @@
 <%- include('header'); -%>
 
     <body>
+        <script>
+            var socket = io();
+            var globalChartArray = [];
+            var resetGraph = [false, false, false, false];
+            const graphOptions = ['time', 'temp', 'field', 'Vx1', 'Vy1', 'freq1', 'Vx2', 'Vy2', 'freq2'];
+        </script>
         <script src="https://polyfill.io/v3/polyfill.min.js?features=es2015%2CIntersectionObserver"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.0/chart.min.js"></script>
         <script src="./chartjs-plugin.js"></script>
@@ -258,24 +264,24 @@
         <script>
             Vue.component("charts", {
                 template: `
-        <div>
-        <div id="chart-container1" style="height:20%;  padding:15px">
-            <div style="float: left;   width: 45%; padding:10px; margin-left: 40px;">
-                <canvas id="myChart0"></canvas>
+            <div>
+            <div id="chart-container1" style="height:20%;  padding:15px">
+                <div style="float: left;   width: 45%; padding:10px; margin-left: 40px;">
+                    <canvas id="myChart0"></canvas>
+                </div>
+                <div style="float: right;   width: 45%; padding:10px; margin-right: 40px;">
+                    <canvas id="myChart1"></canvas>
+                </div>
             </div>
-            <div style="float: right;   width: 45%; padding:10px; margin-right: 40px;">
-                <canvas id="myChart1"></canvas>
+            <div id="chart-container2" style="height:20%;  padding:15px">
+                <div style="float: left;   width: 45%; padding:10px; margin-left: 40px;">
+                    <canvas id="myChart2"></canvas>
+                </div>
+                <div style="float: right;   width: 45%; padding:10px; margin-right: 40px;">
+                    <canvas id="myChart3"></canvas>
+                </div>
             </div>
-        </div>
-        <div id="chart-container2" style="height:20%;  padding:15px">
-            <div style="float: left;   width: 45%; padding:10px; margin-left: 40px;">
-                <canvas id="myChart2"></canvas>
-            </div>
-            <div style="float: right;   width: 45%; padding:10px; margin-right: 40px;">
-                <canvas id="myChart3"></canvas>
-            </div>
-        </div>
-        </div>`,
+            </div>`,
                 methods: {
                     draw: function (options) {
                         var defaultOptions = JSON.parse(options);
@@ -361,7 +367,6 @@
                 }
 
             });
-
             var Chrome = VueColor.Chrome;
             Vue.component('colorpicker', {
                 components: {

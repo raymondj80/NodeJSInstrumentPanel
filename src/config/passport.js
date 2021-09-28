@@ -11,13 +11,13 @@ module.exports = function (passport) {
       User.findOne({ email: email })
         .then((user) => {
           if (!user) {
-            return done(null, false);
+            return done(null, false, { message: "Incorrect username." });
           }
           // Match password
           if (user.validPassword(password)) {
             return done(null, user);
           } else {
-            return done(null, false);
+            return done(null, false, { message: "Incorrect password." });
           }
         })
         .catch((err) => console.log(err));
