@@ -76,6 +76,12 @@ function saveScript(filename, filedata) {
   });
 }
 
+// Run script
+function runScript(filename) {
+  const script_data = getScript(filename);
+  data.sendCommands(script_data);
+}
+
 // Google Drive file upload
 function uploadFile(authClient, filename, folderid) {
   const mydrive = google.drive({ version: "v3", auth: authClient });
@@ -182,46 +188,7 @@ function writeToDatabase(option, datapacket, livedata) {
 
 // mongoose and mongo
 io.on("connection", function (socket) {
-  // const python = spawn("python", ["./python/functions.py", "Patrick"]);
-  // python.stdout.on("data", function (data) {
-  //   NewData = data.toString();
-  //   console.log(NewData);
-  // });
-  // socket.on("order", function (order) {
-  //   // data.getData2();
-  //   var Data = null;
-  //   return Promise.resolve().then((v) => {
-  //     const process = spawn("python", ["./python/functions.py"]);
-  //     process.stdout.on("data", function (data) {
-  //       jsonData = JSON.parse(data.toString());
-  //     });
-  //     try {
-  //       Data = jsonData;
-  //     } catch (error) {
-  //       // console.log("error");
-  //     }
-  //     return Data;
-  //   });
-  // });
-
-  // socket.on("order", function (arg) {
-  //   Orders = ["./python/script3.py"];
-  //   for (var i = 0; i < arg.length; i++) {
-  //     Orders.push(Object.values(arg[i]));
-  //   }
-  //   Orders.push(Orders.length);
-  //   console.log(Orders);
-  //   const python = spawn("python", Orders);
-  //   python.stdout.on("data", function (data) {
-  //     NewData = data.toString();
-  //     console.log(NewData);
-  //   });
-  // });
-
-  // socket.on("datapacket", function (data) {
-  //   datapacket["data"] = data;
-  // });
-  socket.on("script", function (data) {
+  socket.on("save_script", function (data) {
     filename = data["name"];
     filedata = data["data"];
     saveScript(filename, filedata);
@@ -232,8 +199,11 @@ io.on("connection", function (socket) {
   });
 
   socket.on("get_script", (name) => {
-    console.log("getting script...");
     io.emit("returned_script", getScript(name));
+  });
+
+  socket.on("run_script", function (filename) {
+    runScript(filename);
   });
 
   socket.on("reset-stream-data", () => {
@@ -337,5 +307,7 @@ setInterval(function () {
     writeToDatabase(opt, datapacket, myData);
   }
 
+  // print command_num
+  // command_num = data.getCommandNum();
   // console.log('Last updated: ' + new Date());
 }, 1000);

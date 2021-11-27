@@ -253,10 +253,6 @@
             </p>
         </b-container>
 
-
-
-
-
         <b-container class="record-input">
             <hr class="my-4">
             <div>
@@ -300,32 +296,13 @@
                 my_script_name: '',
                 my_script: '',
                 selected_script: null,
-                file1: null,
                 options: [],
-
-                // visibilities: {
-                //     functions_div: {
-                //         'DIV_ON': false,
-                //         'error_div': false,
-                //         'temp_Div': false,
-                //         "mag_Div": false,
-                //     },
-                // },
-                set_functions: [],
             },
             mounted: function () {
                 var d = document.getElementById("messages");
                 d.outerHTML = sessionStorage.logHtml;
             },
             methods: {
-
-                // display_function_div_container() {
-                //     window.app.visibilities.functions_div["DIV_ON"] = true;
-                // },
-                // hide_function_div_container() {
-                //     window.app.visibilities.functions_div["DIV_ON"] = false;
-                // },
-
                 log(message) {
                     var item = document.createElement('li');
                     const now = new Date();
@@ -352,8 +329,7 @@
                 },
                 saveScript(event) {
                     event.preventDefault()
-                    console.log('saving script')
-                    socket.emit("script", { name: this.my_script_name, data: this.my_script });
+                    socket.emit("save_script", { name: this.my_script_name, data: this.my_script });
                 },
                 getScriptNames(event) {
                     event.preventDefault();
@@ -364,6 +340,10 @@
                     this.$root.$emit('bv::hide::modal', 'load-script-modal');
                     this.my_script_name = this.selected_script;
                     socket.emit("get_script", this.selected_script);
+                },
+                runScript(event) {
+                    event.preventDefault();
+                    socket.emit("run_script", this.my_script_name);
                 }
             },
             computed: {
@@ -372,56 +352,7 @@
                 }
             }
         })
-
-        // Swap visibility
-        var function_div_list = ["temp_Div", "mag_Div"];
-
-        function display_function_div(ID) {
-            if (window.app.visibilities.functions_div["DIV_ON"]) {
-                document.getElementById('error_div').style.display = 'none';
-                for (i = 0; i < function_div_list.length; ++i) {
-                    if (function_div_list[i] === ID) {
-                        Swap_Visibility(ID);
-                    } else {
-                        x = document.getElementById(function_div_list[i]);
-                        x.style.display = "none";
-                    }
-                }
-            }
-        }
-
-        function Swap_Visibility(ID) {
-            var x = document.getElementById(ID);
-            if (x.style.display === "block") {
-                x.style.display = "none";
-            } else {
-                x.style.display = "block";
-            }
-        }
-
-        function is_Valid_Number(num, lower_bound, upper_bound, ERROR_ID) {
-            if (!isNaN(num) && num.length > 0) {
-                if (num < lower_bound || num > upper_bound) {
-                    if (document.getElementById(ERROR_ID).style.display === "none") {
-                        Swap_Visibility(ERROR_ID);
-                    }
-                    return false
-                } else {
-                    if (document.getElementById(ERROR_ID).style.display === "block") {
-                        Swap_Visibility(ERROR_ID);
-                    }
-                    return true
-                }
-            } else {
-                if (document.getElementById(ERROR_ID).style.display === "none") {
-                    Swap_Visibility(ERROR_ID);
-                }
-                return false
-            }
-        }
     </script>
-
-
 </body>
 
 </html>

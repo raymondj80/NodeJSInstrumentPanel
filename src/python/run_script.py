@@ -1,19 +1,6 @@
 import sys
 from time import sleep
-import states
 import json
-import vxi11
-
-# def parse_inputs(seq):
-#     cmds = []
-#     with open(seq) as f:
-#         lines = f.readlines()
-#         for line in lines:
-#             cmds.append(line.split(' '))
-#     return cmds
-
-# def parse_commands(cmds):
-#     pass
 
 if sys.platform == 'win32':
     try:
@@ -78,41 +65,58 @@ class QDInstrument:
         while ((check_temp == 1 and ts != 1) or (check_field == 1 and (fs != 1 and fs != 4))):
             t, ts = self.get_temperature()
             f, fs = self.get_field()
-            self.state = (t,f,ts,fs)
-            # print(t,f,ts,fs,check_temp, check_field)
             sleep(1)
-        
         sleep(duration)
 
 class Commands(QDInstrument):
     def __init__(self, instrument_type):
         super().__init__(instrument_type)
         self.cmds = []
-        self.state = []
-        self.query = ''
+        self.state = {'num': -1, 'record': False, 'file': None}
 
-    def parse_sequence(self, seq_file):
-        with open(seq_file) as f:
-            lines = f.readlines()
-            for line in lines:
-                # line[-1].strip()
-                self.cmds.append(line.split(' '))
-        print(self.cmds)
+    def parse_sequence(self, seq):
+        cmds = seq.split("\n")
+        for cmd in cmds:
+            self.cmds.append(cmd.split(" "))
+        # print(self.cmds)
 
     def run_sequence(self):
-        for cmd in self.cmds:
-            print(cmd)
+        for i,cmd in enumerate(self.cmds):
+
+            self.state["num"] = i
+            
+            # Start record
+            if cmd[1] == "START":
+                self.state["record"] = True
+                self.state["file"] = cmd[2]
+
+            # Stop record
+            elif cmd[1] == "STOP":
+                self.state["record"] = False
+                self.state["file"] = None
+
+            print(json.dumps(self.state))
+
+            # Set temperature
             if cmd[1] == "TEMP":
                 self.set_temperature(float(cmd[2]), float(cmd[3]), int(cmd[4]))
 
+            # Set field
             elif cmd[1] == "FIELD":
                 self.set_field(float(cmd[2]), float(cmd[3]), 0, 0)
             
+            # Wait for @params(time, check_temp, check_field)
             elif cmd[1] == "WAITFOR":
                 self.wait_for(float(cmd[2]), int(cmd[3]), int(cmd[4]))
 
+            sleep(0.1)
+            
 if __name__ == "__main__":
     myScript = Commands("DYNACOOL")
-    myScript.parse_sequence('../seq/211122_multivu_seq_waitField.seq')
+    myScript.parse_sequence(sys.argv[1])
     myScript.run_sequence()
+
+    #run_script end
+    myScript.state["num"] = -1
+    print(json.dumps(myScript.state))
 
