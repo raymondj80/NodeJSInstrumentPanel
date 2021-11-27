@@ -51,7 +51,7 @@
         // On packet recieved update header/record functions
         socket.on('data', function (data) {
             updateHeader(data);
-            storeData(data);
+            // storeData(data);
             if (JSON.parse(sessionStorage.recording)) {
                 socket.emit("datapacket", JSON.parse(sessionStorage.streamData))
             }
@@ -63,6 +63,14 @@
             sessionStorage.recording = 'true';
             t = window.app.time.split(":");
             window.app.log(`Recording data for ${t[0]} hour(s) ${t[1]} minute(s) ${t[2]} second(s)`);
+        })
+
+        socket.on('returned_script_names', function (script_names) {
+            window.app.options = script_names;
+        })
+
+        socket.on('returned_script', function (script) {
+            window.app.my_script = script;
         })
 
         socket.on('stopped-recording', function (opt) {
@@ -97,6 +105,18 @@
     .bottom-func-div {
         margin-top: 10px;
         margin-bottom: 10px;
+    }
+
+    .mr-0 {
+        margin-right: 0;
+    }
+
+    .ml-auto {
+        margin-left: auto;
+    }
+
+    .d-block {
+        display: block;
     }
 
     #function_button_container {
@@ -197,123 +217,45 @@
             </b-row>
         </b-container>
 
-        <!-- New Additions -->
-        <b-container>
+        <b-container class="build-script">
             <hr class="my-4">
             <div>
-                <h2>Orders</h2>
-            </div>
-            <div>
-                <b-button v-b-modal.modal-lg variant="primary" @click="display_function_div_container()">Send Orders
-                </b-button>
-                <b-modal id="modal-lg" size="lg" title="Send Orders" hide-header-close>
-                    <div>
+                <h2 style=" text-align: left; display: inline-block; width: 75%;  margin-right: -50%;">
+                    Script
+                </h2>
+                <div style=" float: right; margin-left: -50%;">
 
-                        <div id="function_button_container">
-                            <div id="function_buttons">
-                                <b-button onclick="display_function_div('temp_Div')" class="my-4 function_button">Ramp
-                                    to Temperature</b-button>
-                                <br>
-                                <b-button onclick="display_function_div('mag_Div')" class="my-4 function_button">Apply
-                                    Magnetic Field</b-button>
-                                <br>
-                                <b-button class="my-4 function_button">Function 3 that does <br> a thing </b-button>
-                                <br>
-                                <b-button class="my-4 function_button">Function 4</b-button>
-                                <br>
-                                <b-button class="my-4 function_button">Function 5</b-button>
-                                <br>
-                                <b-button class="my-4 function_button">Function 6</b-button>
-                                <br>
-                                <b-button class="my-4 function_button">Function 7</b-button>
-                                <br>
-                                <b-button class="my-4 function_button">Function 8</b-button>
-                                <br>
-                                <b-button class="my-4 function_button">Function 9</b-button>
-                                <br>
-                                <b-button class="my-4 function_button">Function 10</b-button>
-                                <br>
-                                <b-button class="my-4 function_button">Function 11</b-button>
-                            </div>
-                        </div>
-                        <div id="temp_Div" class="func_Div">
-                            <form id="temp_form" name="temp_form">
-                                <div class="top-func-div">
-                                    <label for="target_temp"><strong>Target Temperature:</strong></label>
-                                    <input id="target_temp" name="target_temp" type="text">
-                                </div>
-                                <br>
-                                <div>
-                                    <label for="temp_rate"><strong>Rate:</strong></label>
-                                    <input id="temp_rate" name="temp_rate" type="text" placeholder="10.00 K/m">
-                                    <label for="temp_mode"><strong>Mode:</strong></label>
-                                    <select id="temp_mode" name="temp_mode" type="text">
-                                        <option value="Linear">Linear</option>
-                                        <option value="No Overshoot">No Overshoot</option>
-                                        <option value="Sweep">Sweep</option>
-                                    </select>
-                                </div>
-                                <div class="bottom-func-div">
-                                    <button @click="onSubmit_Temp">Apply</button>
-                                </div>
-                                <!-- Acceptable modes: Fast, No Overshoot, and Sweep  -->
-                            </form>
-                        </div>
-                        <br>
-                        <div id="mag_Div" class="func_Div">
-                            <form id="mag_form" name="mag_form">
-                                <div class="top-func-div">
-                                    <label for="target_mag"><strong>Target Magnetic Field:</strong></label>
-                                    <input id="target_mag" name="target_mag" type="text">
-                                </div>
-                                <br>
-                                <div>
-                                    <label for="mag_rate"><strong>Rate:</strong></label>
-                                    <input id="mag_rate" name="mag_rate" type="text" placeholder="200 G/m?">
-                                    <label for="mag_mode"><strong>Mode:</strong></label>
-                                    <select id="mag_mode" name="mag_mode" type="text">
-                                        <option value="Linear">Linear</option>
-                                        <option value="No Overshoot">No Overshoot</option>
-                                        <option value="Oscillate">Oscillate</option>
-                                    </select>
-                                </div>
-                                <div class="bottom-func-div">
-                                    <button @click="onSubmit_Mag">Apply</button>
-                                </div>
-                                <!-- Acceptable modes: Linear and Oscillate -->
-                            </form>
-                        </div>
-                        <br>
-                        <div id="error_div">
-                            <p><strong>Invaled Parameters Inputted</strong></p>
-                        </div>
+                    <b-button-group>
+                        <b-form-input v-model="my_script_name" placeholder="Enter filename"></b-form-input>
+                        <b-button @click="saveScript" variant="outline-primary">Save</b-button>
+                        <b-button v-b-modal.load-script-modal @click="getScriptNames" variant="outline-success">Load
+                        </b-button>
+                    </b-button-group>
 
-                        <div id="set_functions_container_cont">
-                            <div id="set_functions_container">
-                                <b-container class="record-input">
-                                    <div>
-                                        <hr class="my-4">
-                                        <h2>Log</h2>
-                                        <ul style="list-style-type:none;" id='function_log'></ul>
-                                    </div>
-                                </b-container>
-                            </div>
-                        </div>
-                    </div>
-                    <template #modal-footer="{ ok, cancel, hide }">
-                        <b>Submit</b>
-                        <!-- Emulate built in modal footer ok and cancel button actions -->
-                        <b-button size="sm" variant="primary" @click="ok(); onSubmit_order()">
-                            OK
-                        </b-button>
-                        <b-button size="sm" variant="danger" @click="cancel(); hide_function_div_container()">
-                            Cancel
-                        </b-button>
-                    </template>
-                </b-modal>
+                    <b-modal id="load-script-modal" title="Load Script">
+                        <b-form-select v-model="selected_script" :options="options"></b-form-select>
+                        <template #modal-footer="{load, cancel}">
+                            <b-button size="sm" variant="success" @click="loadScript">
+                                Load
+                            </b-button>
+                            <b-button size="sm" variant="danger" @click="cancel()">
+                                Cancel
+                            </b-button>
+                        </template>
+                    </b-modal>
+                </div>
             </div>
+
+            <b-form-textarea id="script" v-model="my_script" placeholder="Write script..." rows="3" max-rows="6">
+            </b-form-textarea>
+            <p>
+                <b-button @click="runScript" variant="outline-danger" class="d-block mr-0 ml-auto">Run</b-button>
+            </p>
         </b-container>
-        <!-- End of New Additions -->
+
+
+
+
 
         <b-container class="record-input">
             <hr class="my-4">
@@ -349,52 +291,26 @@
         </b-container>
     </div>
 
-    <!-- <script>
-        //////
-        // Swap visibility
-        var function_div_list = ["temp_Div", "mag_Div"];
-
-        function display_function_div(ID) {
-            for (i = 0; i < function_div_list.length; ++i) {
-                if (function_div_list[i] === ID) {
-                    Swap_Visibility(ID);
-                } else {
-                    x = document.getElementById(function_div_list[i]);
-                    x.style.display = "none";
-                }
-            }
-        }
-
-        function Swap_Visibility(ID) {
-            var x = document.getElementById(ID);
-            if (x.style.display === "block") {
-                x.style.display = "none";
-            } else {
-                x.style.display = "block";
-            }
-        }
-
-        X = document.getElementById("error_div");
-
-        // if (X.style.display === "none") {
-        //     console.log("I hear you")
-        // }
-    </script> -->
-
     <script>
         window.app = new Vue({
             el: '#app',
             data: {
                 name: '',
                 time: '',
-                visibilities: {
-                    functions_div: {
-                        'DIV_ON': false,
-                        'error_div': false,
-                        'temp_Div': false,
-                        "mag_Div": false,
-                    },
-                },
+                my_script_name: '',
+                my_script: '',
+                selected_script: null,
+                file1: null,
+                options: [],
+
+                // visibilities: {
+                //     functions_div: {
+                //         'DIV_ON': false,
+                //         'error_div': false,
+                //         'temp_Div': false,
+                //         "mag_Div": false,
+                //     },
+                // },
                 set_functions: [],
             },
             mounted: function () {
@@ -403,12 +319,13 @@
             },
             methods: {
 
-                display_function_div_container() {
-                    window.app.visibilities.functions_div["DIV_ON"] = true;
-                },
-                hide_function_div_container() {
-                    window.app.visibilities.functions_div["DIV_ON"] = false;
-                },
+                // display_function_div_container() {
+                //     window.app.visibilities.functions_div["DIV_ON"] = true;
+                // },
+                // hide_function_div_container() {
+                //     window.app.visibilities.functions_div["DIV_ON"] = false;
+                // },
+
                 log(message) {
                     var item = document.createElement('li');
                     const now = new Date();
@@ -433,75 +350,21 @@
                     socket.emit("record-state", [this.time.split(':'), this.start_recording, this.stop_recording]);
                     this.stop_recording = false;
                 },
-                onSubmit_order() {
-                    if (this.set_functions.length === 0) {
-                        console.log("error1");
-                    } else if (document.getElementById("error_div").style.display === "block") {
-                        console.log("error2");
-                    } else {
-                        event.preventDefault();
-                        window.app.visibilities.functions_div["DIV_ON"] = false;
-                        var Set_Functions = this.set_functions;
-                        socket.emit('order', this.set_functions);
-                        // console.log(this.set_functions);
-                        //
-                        console.log("Emitting Order")
-                        this.set_functions = [];
-                    }
+                saveScript(event) {
+                    event.preventDefault()
+                    console.log('saving script')
+                    socket.emit("script", { name: this.my_script_name, data: this.my_script });
                 },
-                onSubmit_Temp() {
+                getScriptNames(event) {
                     event.preventDefault();
-                    var item = document.createElement('li');
-                    item.style.position = 'relative';
-                    item.style.margin = "3px";
-
-                    var t = document.getElementsByName("target_temp")[0].value.trim();
-                    var r = document.getElementsByName("temp_rate")[0].value.trim();
-                    var m = document.getElementsByName("temp_mode")[0].value.trim();
-
-                    if (is_Valid_Number(t, 1.7, 400, 'error_div')) {
-                        if (is_Valid_Number(r, 0, 10, 'error_div')) {
-                            item.textContent = "Ramp to " + t + " Kelvin at " + r + " K/m and " + m + " mode.";
-                            function_log.appendChild(item);
-
-                            this.set_functions.push(
-                                {
-                                    Order: "Ramp_to_temp",
-                                    Temp: t,
-                                    Rate: r,
-                                    Mode: m,
-                                }
-                            );
-                        }
-                    }
+                    socket.emit("get_script_names");
                 },
-                onSubmit_Mag() {
+                loadScript(event) {
                     event.preventDefault();
-                    var item = document.createElement('li');
-                    item.style.position = 'relative';
-                    item.style.margin = '3px';
-
-                    var t = document.getElementsByName("target_mag")[0].value.trim();
-                    var r = document.getElementsByName("mag_rate")[0].value.trim();
-                    var m = document.getElementsByName("mag_mode")[0].value.trim();
-
-                    if (is_Valid_Number(t, 0, 9, 'error_div')) {
-                        if (is_Valid_Number(r, 0, 200, 'error_div')) {
-                            item.textContent = "Apply " + t + " T magnetic field at " + r + " G/m and " + m + ' mode.';
-                            function_log.appendChild(item);
-
-                            this.set_functions.push(
-                                {
-                                    Order: "Ramp_to_mag",
-                                    Mag: t,
-                                    Rate: r,
-                                    Mode: m,
-                                }
-                            );
-                        }
-                    }
-                },
-
+                    this.$root.$emit('bv::hide::modal', 'load-script-modal');
+                    this.my_script_name = this.selected_script;
+                    socket.emit("get_script", this.selected_script);
+                }
             },
             computed: {
                 showAlert() {

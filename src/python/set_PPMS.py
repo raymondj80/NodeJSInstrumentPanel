@@ -1,28 +1,5 @@
-# from script2 import my_QD
 import sys
-import json
 
-from pymeasure.instruments import instrument
-modeDict = {
-    'Linear': 0,
-    'No Overshoot': 1,
-    'Oscillate': 2
-}
-# # Orders = json.loads(sys.argv[1])
-# for i in range(1,int(sys.argv[-1])):
-#     order, value, rate, mode = sys.argv[i].split(',')
-#     print(mode)
-if sys.platform == 'win32':
-    try:
-        import win32com.client
-        import pythoncom
-        # print("Successfully imported modules")
-    except ImportError:
-        print("Must import the pywin32 module.  Use:  ")
-        print(f"\tconda install -c anaconda pywin32")
-        print("   or")
-        print(f"\tpip install pywin32")
-        exit()
 
 class QDInstrument:
     def __init__(self, instrument_type):
@@ -52,20 +29,9 @@ class QDInstrument:
 
     def set_temperature(self, temperature, rate, mode=0):
         """Sets temperature and returns MultiVu error code"""
-        err = self._mvu.SetTemperature(temperature, rate, mode)
+        err = self._mvu.SetTemperature(temperature = temperature, rate = rate, mode = mode, wait = True)
 
     def set_field(self, field, rate=100, approach=0, mode=0):
         """Sets field and returns MultiVu error code"""
         err = self._mvu.SetField(field, rate, approach, mode)
-
       
-
-my_QD = QDInstrument('DYNACOOL')
-for i in range(1,int(sys.argv[-1])):
-    order, value, rate, mode = sys.argv[i].split(',')
-    if order == 'Ramp_to_temp':
-        my_QD.set_temperature(value, rate, modeDict[mode])
-    elif order == 'Ramp_to_mag':
-        my_QD.set_field(value, rate, modeDict[mode], 0)
-
-    

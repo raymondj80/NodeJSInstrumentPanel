@@ -1,5 +1,6 @@
 // imports
 const fs = require("fs");
+var path = require("path");
 const app = require("express")();
 const http = require("http").Server(app);
 const mongoose = require("mongoose");
@@ -9,7 +10,6 @@ const StreamData = require("./models/streamData");
 const { Parser } = require("json2csv");
 const { google } = require("googleapis");
 const record = require("./record.js");
-const { spawn } = require("child_process");
 
 // Connect to mongoDB
 const dbURI =
@@ -45,6 +45,34 @@ function authenticate(
       oAuth2Client.setCredentials(JSON.parse(token));
       callback(oAuth2Client, filename, folderid);
     });
+  });
+}
+
+function getScript(filename) {
+  const file = path.join(__dirname, "scripts", filename);
+  const data = fs.readFileSync(file, "utf8");
+  return data;
+}
+
+function getScriptNames() {
+  const folder = path.join(__dirname, "scripts");
+  scripts = [];
+  var files = fs.readdirSync(folder);
+  for (var i in files) {
+    scripts.push(files[i]);
+  }
+  return scripts;
+}
+
+// Save to seq folder
+function saveScript(filename, filedata) {
+  const folder = path.join(__dirname, "scripts");
+  const file = path.join(__dirname, "scripts", filename);
+  if (!fs.existsSync(folder)) {
+    fs.mkdirSync(folder);
+  }
+  fs.writeFile(file, filedata, function (err) {
+    if (err) return console.log(err);
   });
 }
 
@@ -176,23 +204,38 @@ io.on("connection", function (socket) {
   //   });
   // });
 
-  socket.on("order", function (arg) {
-    Orders = ["./python/script3.py"];
-    for (var i = 0; i < arg.length; i++) {
-      Orders.push(Object.values(arg[i]));
-    }
-    Orders.push(Orders.length);
-    console.log(Orders);
-    const python = spawn("python", Orders);
-    python.stdout.on("data", function (data) {
-      NewData = data.toString();
-      console.log(NewData);
-    });
-  });
+  // socket.on("order", function (arg) {
+  //   Orders = ["./python/script3.py"];
+  //   for (var i = 0; i < arg.length; i++) {
+  //     Orders.push(Object.values(arg[i]));
+  //   }
+  //   Orders.push(Orders.length);
+  //   console.log(Orders);
+  //   const python = spawn("python", Orders);
+  //   python.stdout.on("data", function (data) {
+  //     NewData = data.toString();
+  //     console.log(NewData);
+  //   });
+  // });
 
   // socket.on("datapacket", function (data) {
   //   datapacket["data"] = data;
   // });
+  socket.on("script", function (data) {
+    filename = data["name"];
+    filedata = data["data"];
+    saveScript(filename, filedata);
+  });
+
+  socket.on("get_script_names", () => {
+    io.emit("returned_script_names", getScriptNames());
+  });
+
+  socket.on("get_script", (name) => {
+    console.log("getting script...");
+    io.emit("returned_script", getScript(name));
+  });
+
   socket.on("reset-stream-data", () => {
     datapacket["stream_data"] = [];
     time = 0;
