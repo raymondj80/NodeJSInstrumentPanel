@@ -25,7 +25,8 @@ class DataReadWrite {
     this.time += 1;
   }
 
-  async updateHeaders(data) {
+  async updateHeaders() {
+    // console.log(this.jsonData);
     this.socket.emit("data", this.jsonData);
   }
 
@@ -42,6 +43,31 @@ class DataReadWrite {
     }
     this.fs.appendFileSync(file, rows);
     this.fs.appendFileSync(file, "\r\n");
+  }
+
+  async saveFile(filename, foldername, filedata) {
+    const folder = this.path.join(__dirname, "../" + foldername);
+    const file = this.path.join(folder, filename);
+    if (!this.fs.existsSync(folder)) {
+      this.fs.mkdirSync(folder);
+    }
+    this.fs.writeFile(file, filedata, function (err) {
+      if (err) return console.log(err);
+    });
+  }
+
+  async getFileNames(foldername) {
+    const folder = this.path.join(__dirname, "../" + foldername);
+    var myfiles = [];
+    var files = this.fs.readdirSync(folder);
+    for (var i in files) {
+      myfiles.push(files[i]);
+    }
+    return myfiles;
+  }
+
+  async emitMessage(msg, packet) {
+    this.socket.emit(msg, packet);
   }
 
   async fetchInstrumentData() {
@@ -65,4 +91,4 @@ class DataReadWrite {
   }
 }
 
-module.exports.Data = DataReadWrite;
+module.exports = DataReadWrite;

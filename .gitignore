@@ -2,3 +2,5 @@ src/secrets/**
 src/data/**
 .DS_Store
 node_modules/**
+src/.env
+src/scripts/**

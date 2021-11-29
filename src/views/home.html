@@ -50,7 +50,6 @@
 
         // On packet recieved update header/record functions
         socket.on('data', function (data) {
-            console.log(data);
             updateHeader(data);
             // storeData(data);
             if (JSON.parse(sessionStorage.recording)) {
@@ -329,12 +328,12 @@
                     this.stop_recording = false;
                 },
                 saveScript(event) {
-                    event.preventDefault()
-                    socket.emit("save_script", { name: this.my_script_name, data: this.my_script });
+                    event.preventDefault();
+                    socket.emit("save-script", { name: this.my_script_name, data: this.my_script });
                 },
                 getScriptNames(event) {
                     event.preventDefault();
-                    socket.emit("get_script_names");
+                    socket.emit("get-script-names");
                 },
                 loadScript(event) {
                     event.preventDefault();
