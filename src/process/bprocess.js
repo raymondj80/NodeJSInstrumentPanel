@@ -1,11 +1,14 @@
-var path = require("path");
+const path = require("path");
+const fs = require("fs");
 const json2csv = require("json2csv").parse;
+
 var { spawn } = require("child_process");
 const Data = require("../datareadwrite/readwrite");
 const Controller = require("./bcontroller.js");
-const fs = require("fs");
+
 var EventEmitter = require("events").EventEmitter;
 var ee = new EventEmitter();
+
 var data;
 var controller;
 
@@ -29,7 +32,7 @@ async function backgroundLogic([state, packet]) {
     console.log("fetch script names");
     let script_names = await data.getFileNames("scripts");
     data.emitMessage("returned_script_names", script_names);
-  } else if (state == 3) {
+  } else if (state === 3) {
     console.log("getting script");
     filename = packet;
     let script = await data.getFileContent(filename, "scripts");
@@ -39,15 +42,15 @@ async function backgroundLogic([state, packet]) {
     filename = packet;
     let script = await data.getFileContent(filename, "scripts");
     data.runScript(script);
-  } else if (state == 5) {
+  } else if (state === 5) {
     console.log("recording");
     filename = packet;
     data.writeToCSV(filename, "csv");
-  } else if (state == 6) {
+  } else if (state === 6) {
     console.log("running script");
-  } else if (state == 7) {
+  } else if (state === 7) {
     console.log("stop recording");
-  } else if (state == 8) {
+  } else if (state === 8) {
     console.log("finished script");
   }
 
@@ -57,14 +60,14 @@ async function backgroundLogic([state, packet]) {
     .catch((error) => console.log(error));
 }
 
-function backgroundProcess() {
+function backgroundProcess(sample_rate) {
   controller
     .getState()
     .then((res) => backgroundLogic(res))
     .catch((err) => console.log(err));
   setTimeout(function () {
-    backgroundProcess();
-  }, 1000);
+    backgroundProcess(sample_rate);
+  }, sample_rate);
 }
 
 module.exports.backgroundProcess = backgroundProcess;

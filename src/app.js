@@ -28,4 +28,4 @@ app.engine("html", require("ejs").renderFile);
 app.set("view engine", "html");
 
 app.use("/", routes);
-bprocess.backgroundProcess();
+bprocess.backgroundProcess(500);
