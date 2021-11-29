@@ -15,10 +15,6 @@ module.exports = function (io) {
   controller.setIOListener();
 };
 
-const getState = async () => {
-  return 0;
-};
-
 async function backgroundLogic([state, packet]) {
   if (state === 0) {
     console.log("default state");
@@ -45,6 +41,8 @@ async function backgroundLogic([state, packet]) {
     data.runScript(script);
   } else if (state == 5) {
     console.log("recording");
+    filename = packet;
+    data.writeToCSV(filename, "csv");
   } else if (state == 6) {
     console.log("running script");
   } else if (state == 7) {

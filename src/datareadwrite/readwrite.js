@@ -28,23 +28,23 @@ class DataReadWrite {
   }
 
   async updateHeaders() {
-    // console.log(this.jsonData);
     this.socket.emit("data", this.jsonData);
   }
 
-  async writeToCSV(foldername, filename, data) {
-    const folder = path.join(__dirname, foldername);
-    const file = path.join(folder, filename + ".csv");
-    this._makefolder(foldername);
+  async writeToCSV(filename, foldername) {
+    var self = this;
+    const folder = self.path.join(__dirname, "../" + foldername);
+    const file = self.path.join(folder, filename + ".csv");
+    self._makefolder(folder);
 
     let rows;
-    if (!fs.existsSync(file)) {
-      rows = this.json2csv(data, { header: true });
+    if (!self.fs.existsSync(file)) {
+      rows = self.json2csv(self.jsonData, { header: true });
     } else {
-      rows = this.json2csv(data, { header: false });
+      rows = self.json2csv(self.jsonData, { header: false });
     }
-    this.fs.appendFileSync(file, rows);
-    this.fs.appendFileSync(file, "\r\n");
+    self.fs.appendFileSync(file, rows);
+    self.fs.appendFileSync(file, "\r\n");
   }
 
   async saveFile(filename, foldername, filedata) {
@@ -106,8 +106,8 @@ class DataReadWrite {
   }
 
   async _makefolder(foldername) {
-    if (!fs.existsSync(foldername)) {
-      fs.mkdirSync(foldername);
+    if (!this.fs.existsSync(foldername)) {
+      this.fs.mkdirSync(foldername);
     }
   }
 }

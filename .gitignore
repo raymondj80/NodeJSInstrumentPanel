@@ -4,3 +4,4 @@ src/data/**
 node_modules/**
 src/.env
 src/scripts/**
+src/csv/**
