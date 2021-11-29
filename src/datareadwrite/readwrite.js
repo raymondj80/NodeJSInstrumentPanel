@@ -1,12 +1,14 @@
 class DataReadWrite {
-  constructor({ io, path, fs, json2csv, spawn }) {
+  constructor({ io, ee, path, fs, json2csv, spawn }) {
     this.datapacket = {
       record_data: [],
       stream_data: [],
     };
     this.time = 0;
     this.jsonData = null;
+    this.state = null;
     this.socket = io;
+    this.ee = ee;
     this.path = path;
     this.fs = fs;
     this.json2csv = json2csv;
@@ -56,6 +58,12 @@ class DataReadWrite {
     });
   }
 
+  async getFileContent(filename, foldername) {
+    const file = this.path.join(__dirname, "../" + foldername, filename);
+    const data = this.fs.readFileSync(file, "utf8");
+    return data;
+  }
+
   async getFileNames(foldername) {
     const folder = this.path.join(__dirname, "../" + foldername);
     var myfiles = [];
@@ -81,6 +89,19 @@ class DataReadWrite {
     });
     process.on("close", (code) => {
       this.jsonData = _data;
+    });
+  }
+
+  async runScript(script) {
+    var self = this;
+    const process = this.spawn("python", [
+      "-u",
+      this.path.join(__dirname, "./python/run_script.py"),
+      script,
+    ]);
+    process.stdout.on("data", function (script_log) {
+      script = JSON.parse(script_log.toString());
+      self.ee.emit("run-script", script);
     });
   }
 

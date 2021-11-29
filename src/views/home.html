@@ -339,11 +339,11 @@
                     event.preventDefault();
                     this.$root.$emit('bv::hide::modal', 'load-script-modal');
                     this.my_script_name = this.selected_script;
-                    socket.emit("get_script", this.selected_script);
+                    socket.emit("get-script", this.selected_script);
                 },
                 runScript(event) {
                     event.preventDefault();
-                    socket.emit("run_script", this.my_script_name);
+                    socket.emit("run-script", this.my_script_name);
                 }
             },
             computed: {
