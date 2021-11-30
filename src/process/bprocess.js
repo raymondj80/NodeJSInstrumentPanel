@@ -42,17 +42,15 @@ async function backgroundLogic([state, packet]) {
     filename = packet;
     let script = await data.getFileContent(filename, "scripts");
     data.runScript(script);
-
+    data.emitMessage("start_script");
   } else if (state === 5) {
     console.log("recording");
     filename = packet;
-    data.emitMessage("script_recording", filename);
     data.writeToCSV(filename, "csv");
   } else if (state === 6) {
     console.log("running script");
   } else if (state === 7) {
     console.log("stop recording");
-    
   } else if (state === 8) {
     console.log("finished script");
   }

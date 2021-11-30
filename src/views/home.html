@@ -69,15 +69,15 @@
         });
 
         socket.on("script_recording", function (name) {
-            window.app.log(`Writing data to ${name}`);
+            window.app.log(`Writing data to ${name}...`);
         });
 
         socket.on("stop_script_recording", function (name) {
-            window.app.log(`Stopped writing data to ${name}`);
+            window.app.log(`Stopped writing data to ${name}.`);
         });
 
         socket.on("stop_script", function (name) {
-            window.app.log("Script finished");
+            window.app.log("Script finished.");
         });
 
         socket.on('returned_script_names', function (script_names) {

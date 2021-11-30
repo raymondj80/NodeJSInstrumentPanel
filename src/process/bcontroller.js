@@ -5,15 +5,19 @@ class BController {
     this.state = 0;
     this.prev = 0;
     this.data = null;
+    this.file = null;
   }
 
   async setIOListener() {
     var self = this;
     self.ee.on("run-script", function (log) {
-      self.io.emit("script_start");
-      if (log["record"]) self.setState(5, log["file"]);
-      else if (log["num"] == -1) self.setState(8, null);
-      else self.setState(6, null);
+      if (log["record"]) {
+        self.setState(5, log["file"]);
+        self.file = log["file"];
+      } else if (log["num"] == -1) {
+        self.io.emit("stop_script");
+        self.setState(8, null);
+      } else self.setState(6, null);
     });
 
     self.io.on("connection", function (socket) {
@@ -40,7 +44,11 @@ class BController {
   async getState() {
     if (this.prev != this.state) {
       if ((this.prev == 5) & (this.state == 6)) {
+        this.io.emit("stop_script_recording", this.file);
         this.state = 7;
+        this.file = null;
+      } else if ((this.prev == 4 || this.prev == 6) & (this.state == 5)) {
+        this.io.emit("script_recording", this.file);
       }
     } else {
       // if recording continue recording
