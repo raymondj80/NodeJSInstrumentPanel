@@ -58,12 +58,27 @@
             sessionStorage.cnt = parseInt(sessionStorage.cnt) + 1;
         });
 
-        socket.on('started-recording', function (id) {
-            sessionStorage.objectID = id;
-            sessionStorage.recording = 'true';
-            t = window.app.time.split(":");
-            window.app.log(`Recording data for ${t[0]} hour(s) ${t[1]} minute(s) ${t[2]} second(s)`);
-        })
+        // socket.on('started-recording', function (id) {
+        //     sessionStorage.objectID = id;
+        //     sessionStorage.recording = 'true';
+        //     t = window.app.time.split(":");
+        //     window.app.log(`Recording data for ${t[0]} hour(s) ${t[1]} minute(s) ${t[2]} second(s)`);
+        // })
+        socket.on("start_script", function () {
+            window.app.log("Script running...");
+        });
+
+        socket.on("script_recording", function (name) {
+            window.app.log(`Writing data to ${name}`);
+        });
+
+        socket.on("stop_script_recording", function (name) {
+            window.app.log(`Stopped writing data to ${name}`);
+        });
+
+        socket.on("stop_script", function (name) {
+            window.app.log("Script finished");
+        });
 
         socket.on('returned_script_names', function (script_names) {
             window.app.options = script_names;

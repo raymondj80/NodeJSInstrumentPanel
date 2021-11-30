@@ -10,6 +10,7 @@ class BController {
   async setIOListener() {
     var self = this;
     self.ee.on("run-script", function (log) {
+      self.io.emit("script_start");
       if (log["record"]) self.setState(5, log["file"]);
       else if (log["num"] == -1) self.setState(8, null);
       else self.setState(6, null);
@@ -37,15 +38,15 @@ class BController {
   }
 
   async getState() {
-    if (this.prev == this.state) {
-      if (this.state == 5) this.state == 5;
+    if (this.prev != this.state) {
+      if ((this.prev == 5) & (this.state == 6)) {
+        this.state = 7;
+      }
+    } else {
       // if recording continue recording
-      else if (this.state == 6) this.state == 6;
-      // if running exp continue exp
-      else if ((this.prev == 5) & (this.state == 7)) this.state = 6;
-      // if stop, stop recording
-      else if ((this.prev == 8) & (this.state == 6)) this.state = 0;
-      // if end, end exp
+      if (this.state == 5) this.state = 5;
+      else if (this.state == 6) this.state = 6;
+      else if (this.state == 7) this.state = 6;
       else {
         this.state = 0;
         this.data = null;
