@@ -29,12 +29,17 @@ html,body
 .app {
     min-width: 100%;
     min-height: 100%;
+    background-image: linear-gradient(to bottom right, #2F4960 10%, #102040);
 }
 
 .container {
-  min-width: 80%;
-  min-height: 100%;
+  min-width: 95%;
+}
 
+.my-container {
+  min-width: 80%;
+  min-height: 1250px;
+  background-color: #fff;
 }
 
 
@@ -62,4 +67,15 @@ a:hover {
 
 .app {
   background-color: #fff;
+  color: #2F4960;
+}
+
+.jumbotron {
+  padding: 4rem 2rem;
+  height: 225px;
+}
+
+.navbar-nav>li {
+  /* margin-right:50px; use margin or padding values to make it move right/left accordingly */
+  margin-right: auto;
 }

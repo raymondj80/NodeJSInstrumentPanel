@@ -68,117 +68,129 @@
 
 
 <div id="app" class="app">
-    <b-navbar type="dark" variant="dark">
-        <b-navbar-nav>
-            <!-- Navbar dropdowns -->
-            <b-navbar-nav>
-                <b-nav-item href="/home">Home</b-nav-item>
-                <b-nav-item href="/graphs">Graphs</b-nav-item>
-                <b-nav-item href="/gd">Google Drive</b-nav-item>
-            </b-navbar-nav>
+    
 
-        </b-navbar-nav>
-    </b-navbar>
+    <b-navbar toggleable="lg" type="dark" variant="dark">
+        <b-collapse id="nav-collapse" is-nav>
+          <b-navbar-nav>
+            <b-nav-item href="/home">Home</b-nav-item>
+            <b-nav-item href="/graphs">Graphs</b-nav-item>
+            <b-nav-item href="/gd">Google Drive</b-nav-item>
+          </b-navbar-nav>
+    
+          <!-- Right aligned nav items -->
+          <b-navbar-nav class="ml-auto">
+            <b-nav-item-dropdown right>
+                <template #button-content>
+                    <em><%= name %></em>
+                </template>
+              <b-nav-item href="/users/logout">Sign Out</b-nav-item>
+            </b-nav-item-dropdown>
+          </b-navbar-nav>
+        </b-collapse>
+      </b-navbar>
 
-    <b-container>
-        <b-jumbotron header="Control Panel" lead="Node.js control panel for PPMS and SR860 Lock-in">
+    <b-container class="my-container">
+        <b-container class="b-jumbotron">
+            <b-jumbotron header="Control Panel" lead="Node.js control panel for PPMS and SR860 Lock-in">
+            </b-jumbotron>
+        </b-container>
+    
+        <b-container class="data-row">
+            <b-row class="text-left">
+                <b-col style="white-space:nowrap">
+                    <h4>Temperature: <span id='temp-header'></span></h4>
+                    <h4>Vx1: <span id='Vx1-header'></span></h4>
+                    <h4>Vx2: <span id='Vx2-header'></span></h4>
+                </b-col>
+                <b-col style="white-space:nowrap">
+                    <h4>Temperature State: <span id='temp_state-header'></span></h4>
+                    <h4>Vy1: <span id='Vy1-header'></span></h4>
+                    <h4>Vy2: <span id='Vy2-header'></span></h4>
+                </b-col>
+                <b-col style="white-space:nowrap">
+                    <h4>Field: <span id='field-header'></span></h4>
+                    <h4>Frequency1: <span id='freq1-header'></span></h4>
+                    <h4>Frequency2: <span id='freq2-header'></span></h4>
+                </b-col>
+                <b-col style="white-space:nowrap">
+                    <h4>Field State: <span id='field_state-header'></span></h4>
+                    <h4>Theta1: <span id='theta1-header'></span></h4>
+                    <h4>Theta2: <span id='theta2-header'></span></h4>
+                </b-col>
+            </b-row>
+        </b-container>
+    
+        <b-container class="build-script">
             <hr class="my-4">
-        </b-jumbotron>
-    </b-container>
-
-    <b-container class="data-row">
-        <b-row class="text-center">
-            <b-col style="white-space:nowrap">
-                <h4>Temperature: <span id='temp-header'></span></h4>
-                <h4>Vx1: <span id='Vx1-header'></span></h4>
-                <h4>Vx2: <span id='Vx2-header'></span></h4>
-            </b-col>
-            <b-col style="white-space:nowrap">
-                <h4>Temperature State: <span id='temp_state-header'></span></h4>
-                <h4>Vy1: <span id='Vy1-header'></span></h4>
-                <h4>Vy2: <span id='Vy2-header'></span></h4>
-            </b-col>
-            <b-col style="white-space:nowrap">
-                <h4>Field: <span id='field-header'></span></h4>
-                <h4>Frequency1: <span id='freq1-header'></span></h4>
-                <h4>Frequency2: <span id='freq2-header'></span></h4>
-            </b-col>
-            <b-col style="white-space:nowrap">
-                <h4>Field State: <span id='field_state-header'></span></h4>
-                <h4>Theta1: <span id='theta1-header'></span></h4>
-                <h4>Theta2: <span id='theta2-header'></span></h4>
-            </b-col>
-        </b-row>
-    </b-container>
-
-    <b-container class="build-script">
-        <hr class="my-4">
-        <div>
-            <h2 style=" text-align: left; display: inline-block; width: 75%;  margin-right: -50%;">
-                Script
-            </h2>
-            <div style=" float: right; margin-left: -50%;">
-
-                <b-button-group>
-                    <b-form-input v-model="my_script_name" placeholder="Enter filename"></b-form-input>
-                    <b-button @click="saveScript" variant="outline-primary">Save</b-button>
-                    <b-button v-b-modal.load-script-modal @click="getScriptNames" variant="outline-success">Load
-                    </b-button>
-                </b-button-group>
-
-                <b-modal id="load-script-modal" title="Load Script">
-                    <b-form-select v-model="selected_script" :options="options"></b-form-select>
-                    <template #modal-footer="{load, cancel}">
-                        <b-button size="sm" variant="success" @click="loadScript">
-                            Load
+            <div>
+                <h2 style=" text-align: left; display: inline-block; width: 75%;  margin-right: -50%;">
+                    Script
+                </h2>
+                <div style=" float: right; margin-left: -50%;">
+    
+                    <b-button-group>
+                        <b-form-input v-model="my_script_name" placeholder="Enter filename"></b-form-input>
+                        <b-button @click="saveScript" variant="outline-primary">Save</b-button>
+                        <b-button v-b-modal.load-script-modal @click="getScriptNames" variant="outline-success">Load
                         </b-button>
-                        <b-button size="sm" variant="danger" @click="cancel()">
-                            Cancel
-                        </b-button>
-                    </template>
-                </b-modal>
+                    </b-button-group>
+    
+                    <b-modal id="load-script-modal" title="Load Script">
+                        <b-form-select v-model="selected_script" :options="options"></b-form-select>
+                        <template #modal-footer="{load, cancel}">
+                            <b-button size="sm" variant="success" @click="loadScript">
+                                Load
+                            </b-button>
+                            <b-button size="sm" variant="danger" @click="cancel()">
+                                Cancel
+                            </b-button>
+                        </template>
+                    </b-modal>
+                </div>
             </div>
-        </div>
-
-        <b-form-textarea class="text-area" id="script" v-model="my_script" placeholder="Write script..." rows="6" max-rows="10">
-        </b-form-textarea>
-        <p class="run">
-            <b-button @click="runScript" variant="outline-danger" class="d-block mr-0 ml-auto">Run</b-button>
-        </p>
-    </b-container>
-
-    <b-container class="record-input">
-        <hr class="my-4">
-        <div>
-            <h2>Record</h2>
-        </div>
-        <div>
-            <b-form>
-                <b-input-group class="record-inputs">
-                    <b-form-input id="record-time" v-model="time" type="text" placeholder="HH:mm:ss" required>
-                    </b-form-input>
-                    <b-input-group-append>
-                        <b-button-group>
-                            <b-button @click="onStart" variant="outline-success">Start</b-button>
-                            <b-button @click="onStop" variant="outline-danger">Stop</b-button>
-                        </b-button-group>
-                    </b-input-group-append>
-                </b-input-group>
-            </b-form>
-        </div>
-    </b-container>
-
-    <b-container class="record-input2">
-        <hr class="my-4">
-        <div>
-            <h2 style=" text-align: left; display: inline-block; width: 75%;  margin-right: -50%;">
-                Log</h2>
-            <div style=" float: right; margin-left: -50%;">
-                <b-button @click="resetLog" variant="outline-warning">Clear</b-button>
+    
+            <b-form-textarea class="text-area" id="script" v-model="my_script" placeholder="Write script..." rows="10" max-rows="10">
+            </b-form-textarea>
+            <p class="run">
+                <b-button @click="runScript" variant="outline-danger" class="d-block mr-0 ml-auto">Run</b-button>
+            </p>
+        </b-container>
+    
+        <b-container class="record-input">
+            <hr class="my-4">
+            <div>
+                <h2>Record</h2>
             </div>
-        </div>
-        <ul style="list-style-type:none;" id='messages'></ul>
+            <div>
+                <b-form>
+                    <b-input-group class="record-inputs">
+                        <b-form-input id="record-time" v-model="time" type="text" placeholder="HH:mm:ss" required>
+                        </b-form-input>
+                        <b-input-group-append>
+                            <b-button-group>
+                                <b-button @click="onStart" variant="outline-success">Start</b-button>
+                                <b-button @click="onStop" variant="outline-danger">Stop</b-button>
+                            </b-button-group>
+                        </b-input-group-append>
+                    </b-input-group>
+                </b-form>
+            </div>
+        </b-container>
+    
+        <b-container class="record-input2">
+            <hr class="my-4">
+            <div>
+                <h2 style=" text-align: left; display: inline-block; width: 75%;  margin-right: -50%;">
+                    Log</h2>
+                <div style=" float: right; margin-left: -50%;">
+                    <b-button @click="resetLog" variant="outline-warning">Clear</b-button>
+                </div>
+            </div>
+            <ul style="list-style-type:none;" id='messages'></ul>
+        </b-container>
     </b-container>
+    
 </div>
 
 <script>
