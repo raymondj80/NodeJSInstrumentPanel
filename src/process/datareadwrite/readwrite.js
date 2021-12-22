@@ -33,7 +33,7 @@ class DataReadWrite {
 
   async writeToCSV(filename, foldername) {
     var self = this;
-    const folder = self.path.join(__dirname, "../" + foldername);
+    const folder = self.path.join(__dirname, "../../" + foldername);
     const file = self.path.join(folder, filename + ".csv");
     self._makefolder(folder);
 
@@ -48,7 +48,7 @@ class DataReadWrite {
   }
 
   async saveFile(filename, foldername, filedata) {
-    const folder = this.path.join(__dirname, "../" + foldername);
+    const folder = this.path.join(__dirname, "../../" + foldername);
     const file = this.path.join(folder, filename);
     if (!this.fs.existsSync(folder)) {
       this.fs.mkdirSync(folder);
@@ -59,13 +59,13 @@ class DataReadWrite {
   }
 
   async getFileContent(filename, foldername) {
-    const file = this.path.join(__dirname, "../" + foldername, filename);
+    const file = this.path.join(__dirname, "../../" + foldername, filename);
     const data = this.fs.readFileSync(file, "utf8");
     return data;
   }
 
   async getFileNames(foldername) {
-    const folder = this.path.join(__dirname, "../" + foldername);
+    const folder = this.path.join(__dirname, "../../" + foldername);
     var myfiles = [];
     var files = this.fs.readdirSync(folder);
     for (var i in files) {
@@ -94,6 +94,7 @@ class DataReadWrite {
 
   async runScript(script) {
     var self = this;
+    console.log(script);
     const process = this.spawn("python", [
       "-u",
       this.path.join(__dirname, "./python/run_script.py"),

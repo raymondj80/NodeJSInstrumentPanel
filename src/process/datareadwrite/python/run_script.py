@@ -51,10 +51,7 @@ class QDInstrument:
         arg1 = win32com.client.VARIANT(pythoncom.VT_BYREF | pythoncom.VT_I4, 0)
         self._mvu.GetField(arg0, arg1)
         return (arg0.value, arg1.value)
-
-    def set_position():
-        self._mvu.
-    
+        
     def set_temperature(self, temperature, rate, mode=0):
         """Sets temperature and returns MultiVu error code"""
         err = self._mvu.SetTemperature(temperature, rate, mode)

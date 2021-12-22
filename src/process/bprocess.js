@@ -3,7 +3,7 @@ const fs = require("fs");
 const json2csv = require("json2csv").parse;
 
 var { spawn } = require("child_process");
-const Data = require("../datareadwrite/readwrite");
+const Data = require("./datareadwrite/readwrite");
 const Controller = require("./bcontroller.js");
 
 var EventEmitter = require("events").EventEmitter;
