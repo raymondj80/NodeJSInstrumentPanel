@@ -1,81 +1,65 @@
-.func_Div {
-  position: absolute;
-  top: 5%;
-  display: none;
-  text-align: right;
-  margin-left: 35%;
-  border-top: 0.5px solid gray;
-  border-bottom: 0.5px solid gray;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+
+  font-family: 'Fira sans', sans-serif;
 }
 
-.top-func-div {
-  margin-top: 10px;
+html,body
+{
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+    padding: 0px;
+    overflow-x: hidden; 
 }
 
-.bottom-func-div {
-  margin-top: 10px;
-  margin-bottom: 10px;
+.login {
+  background-color: #2F4960;
+  background-image: linear-gradient(to bottom right, #2F4960 10%, #102040);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 100%;
+  max-width: 100%;
+  height: 100%;
+} 
+
+.app {
+    min-width: 100%;
+    min-height: 100%;
 }
 
-.mr-0 {
-  margin-right: 0;
+.container {
+  min-width: 80%;
+  min-height: 100%;
+
 }
 
-.ml-auto {
-  margin-left: auto;
+
+.btn-info {
+  background-color: #2F4960;
+  border-color: #102040;
 }
 
-.d-block {
-  display: block;
+.run {
+  margin-top: 8px;
 }
 
-#function_button_container {
-  border-left: 0.5px solid gray;
-  border-top: 0.5px solid gray;
-  border-bottom: 0.5px solid gray;
-  margin-right: 70%;
-  overflow: auto;
+.card-body {
+  border-radius: 25px;
+  max-width: 640px;
 }
 
-#function_buttons {
-  padding-left: 5%;
-  margin-bottom: -200%;
+.link {
+  color: #2F4960;
 }
 
-.function_button {
-  position: relative;
+a:hover {
+  color: #5bc0de;
 }
 
-#set_functions_container_cont {
-  position: absolute;
-  border: 0.5px solid gray;
-  border-radius: 3%;
-  background-color: antiquewhite;
-  left: 35%;
-  padding-bottom: 45%;
-  padding-right: 60%;
-  bottom: 5%;
-  overflow: auto;
-}
-
-#set_functions_container {
-  position: absolute;
-  margin-left: 0%;
-  margin-right: 2%;
-}
-
-#set_functions {
-  position: absolute;
-  border: 1px solid red;
-  margin-left: 50%;
-}
-
-#error_div {
-  display: none;
-  margin-right: 76%;
-  margin-left: 3%;
-  border: 3px solid red;
-  background-color: black;
-  color: red;
-  text-align: center;
+.app {
+  background-color: #fff;
 }

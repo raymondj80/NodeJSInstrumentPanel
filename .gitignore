@@ -5,3 +5,4 @@ node_modules/**
 src/.env
 src/scripts/**
 src/csv/**
+**__pycache__**
