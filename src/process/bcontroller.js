@@ -3,6 +3,7 @@ class BController {
     this.io = io;
     this.ee = ee;
     this.cnt = 0;
+    this.time = 0;
     this.state = 0;
     this.prev = 0;
     this.data = null;
@@ -36,8 +37,6 @@ class BController {
       });
       socket.on("record-state", function (data) {
         self.setState(9, data);
-        this.time = (+data['time'][0] * 60 * 60 + +data['time'][1] * 60 + +data['time'][2] - 1)
-        console.log(this.time)
       });
     });
   }
@@ -45,6 +44,9 @@ class BController {
   setState(val, data) {
     this.state = val;
     this.data = data;
+    if (data != null && data.constructor == Object && "time" in data) {
+      this.time = this.data["time"];
+    }
   }
 
   async getState() {
@@ -61,10 +63,10 @@ class BController {
       if (this.cnt > this.time) {
         this.state = 8;
         this.cnt = 0;
-      } else if (this.state == 5) {
-        this.state = 5;
+      } else if (this.state == 9) {
+        this.state = 9;
         this.cnt += 1;
-      } 
+      } else if (this.state == 5) this.state = 5;
       else if (this.state == 6) this.state = 6;
       else if (this.state == 7) this.state = 6;
       else {

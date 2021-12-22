@@ -4,98 +4,100 @@
 
 
 <script>
-        // update headers 
-        function updateHeader(data) {
-            for (var key in data) {
-                // console.log(key);
-                if (typeof data[key] === "number") {
-                    // round to 9 decimal places
-                    document.getElementById(key.concat('-header')).innerHTML = data[key].toFixed(9);
-                }
-                else {
-                    document.getElementById(key.concat('-header')).innerHTML = data[key];
-                }
-            };
-        };
-
-        const socket = io();
-
-        // On packet recieved update header/record functions
-        socket.on('data', function (data) {
-            updateHeader(data);
-            // storeData(data);
-            if (JSON.parse(sessionStorage.recording)) {
-                socket.emit("datapacket", JSON.parse(sessionStorage.streamData))
-            }
-            sessionStorage.cnt = parseInt(sessionStorage.cnt) + 1;
-        });
-
-        socket.on("start_script", function () {
-            window.app.log("Script running...");
-        });
-
-        socket.on("script_recording", function (name) {
-            window.app.log(`Writing data to ${name}...`);
-        });
-
-        socket.on("stop_script_recording", function (name) {
-            window.app.log(`Stopped writing data to ${name}.`);
-        });
-
-        socket.on("stop_script", function (name) {
-            window.app.log("Script finished.");
-        });
-
-        socket.on('returned_script_names', function (script_names) {
-            window.app.options = script_names;
-        })
-
-        socket.on('returned_script', function (script) {
-            window.app.my_script = script;
-        })
-
-        socket.on('stopped-recording', function (opt) {
-            if (opt == 1) {
-                sessionStorage.recording = 'false';
-                window.app.log('Stopped Recording...')
+    // update headers 
+    function updateHeader(data) {
+        for (var key in data) {
+            // console.log(key);
+            if (typeof data[key] === "number") {
+                // round to 9 decimal places
+                document.getElementById(key.concat('-header')).innerHTML = data[key].toFixed(9);
             }
             else {
-                sessionStorage.recording = 'false';
-                window.app.log('Finished Recording')
+                document.getElementById(key.concat('-header')).innerHTML = data[key];
             }
-        })
+        };
+    };
+
+    const socket = io();
+
+    // On packet recieved update header/record functions
+    socket.on('data', function (data) {
+        updateHeader(data);
+        // storeData(data);
+        if (JSON.parse(sessionStorage.recording)) {
+            socket.emit("datapacket", JSON.parse(sessionStorage.streamData))
+        }
+        sessionStorage.cnt = parseInt(sessionStorage.cnt) + 1;
+    });
+
+    socket.on("start_script", function () {
+        window.app.log("Script running...");
+    });
+
+    socket.on("script_recording", function (name) {
+        window.app.log(`Writing data to ${name}...`);
+    });
+
+    socket.on("stop_script_recording", function (name) {
+        window.app.log(`Stopped writing data to ${name}.`);
+    });
+
+    socket.on("stop_script", function (name) {
+        window.app.log("Script finished.");
+    });
+
+    socket.on('returned_script_names', function (script_names) {
+        window.app.options = script_names;
+    })
+
+    socket.on('returned_script', function (script) {
+        window.app.my_script = script;
+    })
+
+    socket.on('stopped-recording', function (opt) {
+        if (opt == 1) {
+            sessionStorage.recording = 'false';
+            window.app.log('Stopped Recording...')
+        }
+        else {
+            sessionStorage.recording = 'false';
+            window.app.log('Finished Recording')
+        }
+    })
 </script>
 
 
 <div id="app" class="app">
-    
+
 
     <b-navbar toggleable="lg" type="dark" variant="dark">
         <b-collapse id="nav-collapse" is-nav>
-          <b-navbar-nav>
-            <b-nav-item href="/home">Home</b-nav-item>
-            <b-nav-item href="/graphs">Graphs</b-nav-item>
-            <b-nav-item href="/gd">Google Drive</b-nav-item>
-          </b-navbar-nav>
-    
-          <!-- Right aligned nav items -->
-          <b-navbar-nav class="ml-auto">
-            <b-nav-item-dropdown right>
-                <template #button-content>
-                    <em><%= name %></em>
-                </template>
-              <b-nav-item href="/users/logout">Sign Out</b-nav-item>
-            </b-nav-item-dropdown>
-          </b-navbar-nav>
+            <b-navbar-nav>
+                <b-nav-item href="/home">Home</b-nav-item>
+                <b-nav-item href="/graphs">Graphs</b-nav-item>
+                <b-nav-item href="/gd">Google Drive</b-nav-item>
+            </b-navbar-nav>
+
+            <!-- Right aligned nav items -->
+            <b-navbar-nav class="ml-auto">
+                <b-nav-item-dropdown right>
+                    <template #button-content>
+                        <em>
+                            <%= name %>
+                        </em>
+                    </template>
+                    <b-nav-item href="/users/logout">Sign Out</b-nav-item>
+                </b-nav-item-dropdown>
+            </b-navbar-nav>
         </b-collapse>
-      </b-navbar>
+    </b-navbar>
 
     <b-container class="my-container">
         <b-container class="b-jumbotron">
             <b-jumbotron header="Control Panel" lead="Node.js control panel for PPMS and SR860 Lock-in">
             </b-jumbotron>
         </b-container>
-    
+
         <b-container class="data-row">
             <b-row class="text-left">
                 <b-col style="white-space:nowrap">
@@ -120,7 +122,7 @@
                 </b-col>
             </b-row>
         </b-container>
-    
+
         <b-container class="build-script">
             <hr class="my-4">
             <div>
@@ -128,14 +130,14 @@
                     Script
                 </h2>
                 <div style=" float: right; margin-left: -50%;">
-    
+
                     <b-button-group>
                         <b-form-input v-model="my_script_name" placeholder="Enter filename"></b-form-input>
                         <b-button @click="saveScript" variant="outline-primary">Save</b-button>
                         <b-button v-b-modal.load-script-modal @click="getScriptNames" variant="outline-success">Load
                         </b-button>
                     </b-button-group>
-    
+
                     <b-modal id="load-script-modal" title="Load Script">
                         <b-form-select v-model="selected_script" :options="options"></b-form-select>
                         <template #modal-footer="{load, cancel}">
@@ -149,14 +151,15 @@
                     </b-modal>
                 </div>
             </div>
-    
-            <b-form-textarea class="text-area" id="script" v-model="my_script" placeholder="Write script..." rows="10" max-rows="10">
+
+            <b-form-textarea class="text-area" id="script" v-model="my_script" placeholder="Write script..." rows="10"
+                max-rows="10">
             </b-form-textarea>
             <p class="run">
                 <b-button @click="runScript" variant="outline-danger" class="d-block mr-0 ml-auto">Run</b-button>
             </p>
         </b-container>
-    
+
         <b-container class="record-input">
             <hr class="my-4">
             <div>
@@ -164,7 +167,7 @@
                     Record
                 </h2>
                 <div style=" float: right; margin-left: -50%;">
-    
+
                     <b-button-group>
                         <b-form-input v-model="record_name" placeholder="Enter filename"></b-form-input>
                         <b-button @click="onStart" variant="outline-success">Start</b-button>
@@ -179,9 +182,9 @@
                         </b-form-input>
                     </b-input-group>
                 </b-form>
-            </div> 
-        </b-container> 
-    
+            </div>
+        </b-container>
+
         <b-container class="record-input2">
             <hr class="my-4">
             <div>
@@ -194,7 +197,7 @@
             <ul style="list-style-type:none;" id='messages'></ul>
         </b-container>
     </b-container>
-    
+
 </div>
 
 <script>
@@ -229,7 +232,9 @@
             onStart(event) {
                 event.preventDefault()
                 this.start_recording = true;
-                socket.emit("record-state", {time: this.time.split(':'), name: this.record_name});
+                time = this.time.split(':');
+                converted_time = (+time[0] * 60 * 60 + +time[1] * 60 + +time[2] - 1);
+                socket.emit("record-state", { time: converted_time, name: this.record_name });
             },
             onStop(event) {
                 event.preventDefault()
@@ -263,5 +268,3 @@
         }
     })
 </script>
-
-
