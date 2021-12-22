@@ -44,7 +44,7 @@ async function backgroundLogic([state, packet]) {
     data.runScript(script);
     data.emitMessage("start_script");
   } else if (state === 5) {
-    console.log("recording");
+    console.log("script recording");
     filename = packet;
     data.writeToCSV(filename, "csv");
   } else if (state === 6) {
@@ -53,6 +53,11 @@ async function backgroundLogic([state, packet]) {
     console.log("stop recording");
   } else if (state === 8) {
     console.log("finished script");
+  } else if (state === 9) {
+    console.log("manual recording");
+    filename = packet["name"];
+    console.log(filename);
+    data.writeToCSV(filename, "csv");
   }
 
   data

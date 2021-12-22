@@ -29,8 +29,6 @@ mongoose
 
 // Middleware
 app.use(expressLayouts);
-
-// app.engine("html", require("ejs").renderFile);
 app.set("view engine", "ejs");
 
 // Express body parser
@@ -44,8 +42,6 @@ app.use(
     saveUninitialized: true
   })
 );
-
-
 
 // Passport.js
 app.use(passport.initialize());

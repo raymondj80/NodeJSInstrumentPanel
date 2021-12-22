@@ -2,6 +2,7 @@ class BController {
   constructor({ io, ee }) {
     this.io = io;
     this.ee = ee;
+    this.cnt = 0;
     this.state = 0;
     this.prev = 0;
     this.data = null;
@@ -33,6 +34,11 @@ class BController {
       socket.on("run-script", function (name) {
         self.setState(4, name);
       });
+      socket.on("record-state", function (data) {
+        self.setState(9, data);
+        this.time = (+data['time'][0] * 60 * 60 + +data['time'][1] * 60 + +data['time'][2] - 1)
+        console.log(this.time)
+      });
     });
   }
 
@@ -52,7 +58,13 @@ class BController {
       }
     } else {
       // if recording continue recording
-      if (this.state == 5) this.state = 5;
+      if (this.cnt > this.time) {
+        this.state = 8;
+        this.cnt = 0;
+      } else if (this.state == 5) {
+        this.state = 5;
+        this.cnt += 1;
+      } 
       else if (this.state == 6) this.state = 6;
       else if (this.state == 7) this.state = 6;
       else {

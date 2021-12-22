@@ -160,23 +160,27 @@
         <b-container class="record-input">
             <hr class="my-4">
             <div>
-                <h2>Record</h2>
+                <h2 style=" text-align: left; display: inline-block; width: 75%;  margin-right: -50%;">
+                    Record
+                </h2>
+                <div style=" float: right; margin-left: -50%;">
+    
+                    <b-button-group>
+                        <b-form-input v-model="record_name" placeholder="Enter filename"></b-form-input>
+                        <b-button @click="onStart" variant="outline-success">Start</b-button>
+                        <b-button @click="onStop" variant="outline-danger">Stop</b-button>
+                    </b-button-group>
+                </div>
             </div>
             <div>
                 <b-form>
                     <b-input-group class="record-inputs">
                         <b-form-input id="record-time" v-model="time" type="text" placeholder="HH:mm:ss" required>
                         </b-form-input>
-                        <b-input-group-append>
-                            <b-button-group>
-                                <b-button @click="onStart" variant="outline-success">Start</b-button>
-                                <b-button @click="onStop" variant="outline-danger">Stop</b-button>
-                            </b-button-group>
-                        </b-input-group-append>
                     </b-input-group>
                 </b-form>
-            </div>
-        </b-container>
+            </div> 
+        </b-container> 
     
         <b-container class="record-input2">
             <hr class="my-4">
@@ -200,6 +204,7 @@
             name: '',
             time: '',
             my_script_name: '',
+            record_name: '',
             my_script: '',
             selected_script: null,
             options: [],
@@ -224,8 +229,7 @@
             onStart(event) {
                 event.preventDefault()
                 this.start_recording = true;
-                socket.emit("record-state", [this.time.split(':'), this.start_recording, this.stop_recording]);
-                this.start_recording = false;
+                socket.emit("record-state", {time: this.time.split(':'), name: this.record_name});
             },
             onStop(event) {
                 event.preventDefault()

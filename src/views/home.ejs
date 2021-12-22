@@ -24,9 +24,7 @@
 
     <script>
         var socket = io();
-        if (sessionStorage.objectID === undefined) {
-            sessionStorage.setItem('objectID', '')
-        }
+
         if (sessionStorage.recording === undefined) {
             sessionStorage.setItem('recording', 'false');
         }
@@ -194,8 +192,8 @@
                         </b-form-input>
                         <b-input-group-append>
                             <b-button-group>
-                                <b-button @click="onStart" variant="outline-success">Start</b-button>
-                                <b-button @click="onStop" variant="outline-danger">Stop</b-button>
+                                <b-button @click="startRecord" variant="outline-success">Start</b-button>
+                                <b-button @click="stopRecord" variant="outline-danger">Stop</b-button>
                             </b-button-group>
                         </b-input-group-append>
                     </b-input-group>
@@ -244,17 +242,13 @@
                     var d = document.getElementById("messages");
                     d.outerHTML = sessionStorage.logHtml;
                 },
-                onStart(event) {
+                startRecord(event) {
                     event.preventDefault()
-                    this.start_recording = true;
-                    socket.emit("record-state", [this.time.split(':'), this.start_recording, this.stop_recording]);
-                    this.start_recording = false;
+                    socket.emit("record-state", this.time.split(':'));
                 },
-                onStop(event) {
+                stopRecord(event) {
                     event.preventDefault()
-                    this.stop_recording = true;
-                    socket.emit("record-state", [this.time.split(':'), this.start_recording, this.stop_recording]);
-                    this.stop_recording = false;
+                    socket.emit("record-state", this.time.split(':'));
                 },
                 saveScript(event) {
                     event.preventDefault();
