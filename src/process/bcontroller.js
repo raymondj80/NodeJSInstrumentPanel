@@ -35,8 +35,11 @@ class BController {
       socket.on("run-script", function (name) {
         self.setState(4, name);
       });
-      socket.on("record-state", function (data) {
+      socket.on("start-manual-record", function (data) {
         self.setState(9, data);
+      });
+      socket.on("stop-manual-record", function () {
+        self.setState(8, null);
       });
     });
   }
@@ -57,12 +60,16 @@ class BController {
         this.file = null;
       } else if ((this.prev == 4 || this.prev == 6) & (this.state == 5)) {
         this.io.emit("script_recording", this.file);
+      } else if ((this.prev == 9) & (this.state == 8)) {
+        this.cnt = 0;
       }
     } else {
       // if recording continue recording
-      if (this.cnt > this.time) {
+      if (this.cnt == this.time) {
         this.state = 8;
-        this.cnt = 0;
+        this.time = null;
+        this.cnt = 1;
+        this.io.emit("finished_recording");
       } else if (this.state == 9) {
         this.state = 9;
         this.cnt += 1;

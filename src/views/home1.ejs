@@ -54,15 +54,8 @@
         window.app.my_script = script;
     })
 
-    socket.on('stopped-recording', function (opt) {
-        if (opt == 1) {
-            sessionStorage.recording = 'false';
-            window.app.log('Stopped Recording...')
-        }
-        else {
-            sessionStorage.recording = 'false';
-            window.app.log('Finished Recording')
-        }
+    socket.on('finished_recording', function () {
+        window.app.log('Finished manual recording.');
     })
 </script>
 
@@ -170,8 +163,8 @@
 
                     <b-button-group>
                         <b-form-input v-model="record_name" placeholder="Enter filename"></b-form-input>
-                        <b-button @click="onStart" variant="outline-success">Start</b-button>
-                        <b-button @click="onStop" variant="outline-danger">Stop</b-button>
+                        <b-button @click="startManualRecord" variant="outline-success">Start</b-button>
+                        <b-button @click="StopManualRecord" variant="outline-danger">Stop</b-button>
                     </b-button-group>
                 </div>
             </div>
@@ -229,18 +222,17 @@
                 var d = document.getElementById("messages");
                 d.outerHTML = sessionStorage.logHtml;
             },
-            onStart(event) {
-                event.preventDefault()
-                this.start_recording = true;
+            startManualRecord(event) {
+                event.preventDefault();
                 time = this.time.split(':');
-                converted_time = (+time[0] * 60 * 60 + +time[1] * 60 + +time[2] - 1);
-                socket.emit("record-state", { time: converted_time, name: this.record_name });
+                converted_time = (+time[0] * 60 * 60 + +time[1] * 60 + +time[2] - 2); //-2 to account for cnt incrementing after first dataWriteCSV call
+                socket.emit("start-manual-record", { time: converted_time, name: this.record_name });
+                this.log(`Started manual recording for ${time[0]} hour(s) ${time[1]} minute(s) ${time[2]} second(s)...`);
             },
-            onStop(event) {
+            StopManualRecord(event) {
                 event.preventDefault()
-                this.stop_recording = true;
-                socket.emit("record-state", [this.time.split(':'), this.start_recording, this.stop_recording]);
-                this.stop_recording = false;
+                socket.emit("stop-manual-record");
+                this.log("Stopped manual recording.");
             },
             saveScript(event) {
                 event.preventDefault();
