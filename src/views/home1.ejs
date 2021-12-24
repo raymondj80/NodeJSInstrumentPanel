@@ -19,15 +19,11 @@
     };
 
     const socket = io();
+    socket.emit("logged-in");
 
     // On packet recieved update header/record functions
     socket.on('data', function (data) {
         updateHeader(data);
-        // storeData(data);
-        if (JSON.parse(sessionStorage.recording)) {
-            socket.emit("datapacket", JSON.parse(sessionStorage.streamData))
-        }
-        sessionStorage.cnt = parseInt(sessionStorage.cnt) + 1;
     });
 
     socket.on("start_script", function () {
@@ -66,7 +62,7 @@
     <b-navbar toggleable="lg" type="dark" variant="dark">
         <b-collapse id="nav-collapse" is-nav>
             <b-navbar-nav>
-                <b-nav-item href="/home">Home</b-nav-item>
+                <b-nav-item href="/home1">Home</b-nav-item>
                 <b-nav-item href="/graphs">Graphs</b-nav-item>
                 <b-nav-item href="/gd">Google Drive</b-nav-item>
             </b-navbar-nav>
@@ -79,7 +75,7 @@
                             <%= name %>
                         </em>
                     </template>
-                    <b-nav-item href="/users/logout">Sign Out</b-nav-item>
+                    <b-nav-item @click="logout">Sign Out</b-nav-item>
                 </b-nav-item-dropdown>
             </b-navbar-nav>
         </b-collapse>
@@ -225,7 +221,7 @@
             startManualRecord(event) {
                 event.preventDefault();
                 time = this.time.split(':');
-                converted_time = (+time[0] * 60 * 60 + +time[1] * 60 + +time[2] - 2); //-2 to account for cnt incrementing after first dataWriteCSV call
+                converted_time = (+time[0] * 60 * 60 + +time[1] * 60 + +time[2] - 2); // -2 to account for cnt incrementing after first dataWriteCSV call
                 socket.emit("start-manual-record", { time: converted_time, name: this.record_name });
                 this.log(`Started manual recording for ${time[0]} hour(s) ${time[1]} minute(s) ${time[2]} second(s)...`);
             },
@@ -251,6 +247,11 @@
             runScript(event) {
                 event.preventDefault();
                 socket.emit("run-script", this.my_script_name);
+            },
+            logout(event) {
+                event.preventDefault();
+                socket.emit("logged-out");
+                window.location.href = "/users/logout";
             }
         },
         computed: {

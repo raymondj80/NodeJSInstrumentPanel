@@ -1,5 +1,5 @@
 class DataReadWrite {
-  constructor({ io, ee, path, fs, json2csv, spawn }) {
+  constructor({ io, ee, path, fs, json2csv, csvtojson, spawn }) {
     this.datapacket = {
       record_data: [],
       stream_data: [],
@@ -12,6 +12,7 @@ class DataReadWrite {
     this.path = path;
     this.fs = fs;
     this.json2csv = json2csv;
+    this.csvtojson = csvtojson;
     this.spawn = spawn;
   }
 
@@ -110,6 +111,26 @@ class DataReadWrite {
     if (!this.fs.existsSync(foldername)) {
       this.fs.mkdirSync(foldername);
     }
+  }
+
+  async _csvtojson(csv) {
+    this.csvtojson()
+      .fromFile(csv)
+      .then(csvData => {
+        return csvData;
+      })
+  }
+
+  async saveOnLogout() {
+    const directoryPath = path.join(__dirname, "../../" + 'User');
+    this.fs.readdir(directoryPath, function (err, files) {
+      if (err) {
+        return console.log('Unable to scan directory: ' + err);
+      }
+      files.forEach(function (file) {
+        console.log(file);
+      })
+    });
   }
 }
 

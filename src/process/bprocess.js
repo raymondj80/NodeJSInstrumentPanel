@@ -1,10 +1,12 @@
 const path = require("path");
 const fs = require("fs");
 const json2csv = require("json2csv").parse;
+const csvtojson = require("csvtojson").parse;
 
 var { spawn } = require("child_process");
 const Data = require("./datareadwrite/readwrite");
 const Controller = require("./bcontroller.js");
+
 
 var EventEmitter = require("events").EventEmitter;
 var ee = new EventEmitter();
@@ -19,11 +21,12 @@ module.exports = function (io) {
 };
 
 async function backgroundLogic([state, packet]) {
-  if (state === 0) {
-    console.log("default state");
-  }
-
-  if (state === 1) {
+  if (state === -1) {
+    console.log("logged out");
+    return;
+  } else if (state === 0) {
+    console.log("idle state");
+  } else if (state === 1) {
     console.log("save script");
     filename = packet["name"];
     filedata = packet["data"];

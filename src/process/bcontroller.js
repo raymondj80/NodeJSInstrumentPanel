@@ -4,7 +4,7 @@ class BController {
     this.ee = ee;
     this.cnt = 0;
     this.time = 0;
-    this.state = 0;
+    this.state = -1;
     this.prev = 0;
     this.data = null;
     this.file = null;
@@ -23,6 +23,12 @@ class BController {
     });
 
     self.io.on("connection", function (socket) {
+      socket.on("logged-in", function () {
+        self.setState(0, null);
+      });
+      socket.on("logged-out", function () {
+        self.setState(-1, null);
+      });
       socket.on("save-script", function (data) {
         self.setState(1, data);
       });
@@ -47,6 +53,7 @@ class BController {
   setState(val, data) {
     this.state = val;
     this.data = data;
+    // check data['time'] to get valid time 
     if (data != null && data.constructor == Object && "time" in data) {
       this.time = this.data["time"];
     }
@@ -65,7 +72,7 @@ class BController {
       }
     } else {
       // if recording continue recording
-      if (this.cnt == this.time) {
+      if ((this.state == 9) && (this.cnt == this.time)) {
         this.state = 8;
         this.time = null;
         this.cnt = 1;
@@ -73,7 +80,9 @@ class BController {
       } else if (this.state == 9) {
         this.state = 9;
         this.cnt += 1;
-      } else if (this.state == 5) this.state = 5;
+      } 
+      else if (this.state == -1) this.state = -1;
+      else if (this.state == 5) this.state = 5;
       else if (this.state == 6) this.state = 6;
       else if (this.state == 7) this.state = 6;
       else {
