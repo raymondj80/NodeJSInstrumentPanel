@@ -1,12 +1,12 @@
 const path = require("path");
 const fs = require("fs");
 const json2csv = require("json2csv").parse;
-const csvtojson = require("csvtojson").parse;
+const csvtojson = require("csvtojson");
 
 var { spawn } = require("child_process");
+const Users = require("../models/User.js");
 const Data = require("./datareadwrite/readwrite");
 const Controller = require("./bcontroller.js");
-
 
 var EventEmitter = require("events").EventEmitter;
 var ee = new EventEmitter();
@@ -15,7 +15,7 @@ var data;
 var controller;
 
 module.exports = function (io) {
-  data = new Data({ io, ee, path, fs, json2csv, spawn });
+  data = new Data({ io, ee, path, fs, json2csv, csvtojson, spawn, Users });
   controller = new Controller({ io, ee });
   controller.setIOListener();
 };
@@ -59,8 +59,13 @@ async function backgroundLogic([state, packet]) {
   } else if (state === 9) {
     console.log("manual recording");
     filename = packet["name"];
-    console.log(filename);
     data.writeToCSV(filename, "csv");
+  } else if (state === 10) {
+    console.log("loading user session");
+    data.loadOnLogin(packet);
+  } else if (state === 11) {
+    console.log("saving user session");
+    data.saveOnLogout();
   }
 
   data

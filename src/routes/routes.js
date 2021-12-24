@@ -9,14 +9,16 @@ router.get('/', forwardAuthenticated, (req, res) => res.render('welcome'));
 // Control Panel Home Page
 router.get('/home', ensureAuthenticated, (req, res) =>
   res.render('home', {
-    name: req.user
+    name: req.user.name,
+    email: req.user.email,
   })
 );
 
 // Control Panel Home Page
 router.get('/home1', ensureAuthenticated, (req, res) =>
   res.render('home1', {
-    name: req.user.name
+    name: req.user.name,
+    email: req.user.email
   })
 );
 

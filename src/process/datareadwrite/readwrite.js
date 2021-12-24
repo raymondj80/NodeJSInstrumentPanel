@@ -1,10 +1,11 @@
 class DataReadWrite {
-  constructor({ io, ee, path, fs, json2csv, csvtojson, spawn }) {
+  constructor({ io, ee, path, fs, json2csv, csvtojson, spawn, Users }) {
     this.datapacket = {
       record_data: [],
       stream_data: [],
     };
     this.time = 0;
+    this.userid = "";
     this.jsonData = null;
     this.state = null;
     this.socket = io;
@@ -14,6 +15,7 @@ class DataReadWrite {
     this.json2csv = json2csv;
     this.csvtojson = csvtojson;
     this.spawn = spawn;
+    this.Users = Users;
   }
 
   async updateStreamData() {
@@ -113,25 +115,98 @@ class DataReadWrite {
     }
   }
 
-  async _csvtojson(csv) {
-    this.csvtojson()
-      .fromFile(csv)
-      .then(csvData => {
-        return csvData;
-      })
+  async scriptsavetodb(filename, directoryPath) {
+    const data = this.fs.readFileSync(this.path.join(directoryPath, filename), "utf8");
+    this.Users.findByIdAndUpdate(this.userid, [ 
+      { 
+          $set: { 
+              Scripts: {
+                  $reduce: {
+                      input: { $ifNull: [ "$Scripts", [] ] }, 
+                      initialValue: { scripts: [], update: false },
+                      in: {
+                          $cond: [ { $eq: [ "$$this.name", filename ] },
+                                   { 
+                                     scripts: { 
+                                        $concatArrays: [
+                                            "$$value.scripts",
+                                            [ { name: "$$this.name", script: data } ],
+                                        ] 
+                                      }, 
+                                      update: true
+                                   },
+                                   { 
+                                      scripts: { 
+                                         $concatArrays: [ "$$value.scripts", [ "$$this" ] ] 
+                                      }, 
+                                      update: "$$value.update" 
+                                   }
+                          ]
+                      }
+                  }
+              }
+          }
+      },
+      { 
+          $set: { 
+              Scripts: { 
+                  $cond: [ { $eq: [ "$Scripts.update", false ] },
+                           { $concatArrays: [ "$Scripts.scripts", [ {name: filename, script: data} ] ] },
+                           { $concatArrays: [ "$Scripts.scripts", [] ] }
+                  ] 
+              }
+          }
+      }
+    ]).then((res) => {
+      console.log(res.Scripts);
+    });
+  }
+
+  async retrieveUserID(user_email) {
+    console.log("retrieving user id");
+    this.Users.findOne({email: user_email}).then((res) => {
+      this.userid = res.id;
+    })
+  }
+
+  async retrieveUserScripts(user_email, scriptPath) {
+    console.log("retrieving user scripts");
+    this.Users.findOne({email: user_email}).then((res) => {
+      var scripts = res.Scripts;
+      scripts.forEach((script) => {
+        console.log(scriptPath);
+          this.fs.writeFile(this.path.join(scriptPath, script.name), script.script, err => {
+            if (err) console.log(err);
+          });
+      });
+    })
+  }
+
+  async loadOnLogin(user_email) {
+    var self = this;
+    const scriptPath = self.path.join(__dirname, "../../" + 'scripts');
+    console.log(scriptPath);
+    self.retrieveUserID(user_email);
+    self.retrieveUserScripts(user_email, scriptPath);
   }
 
   async saveOnLogout() {
-    const directoryPath = path.join(__dirname, "../../" + 'User');
-    this.fs.readdir(directoryPath, function (err, files) {
+    var self = this;
+    const directoryPath = self.path.join(__dirname, "../../" + 'scripts');
+    self.fs.readdir(directoryPath, function (err, files) {
       if (err) {
         return console.log('Unable to scan directory: ' + err);
       }
-      files.forEach(function (file) {
-        console.log(file);
-      })
+      files.forEach(function (filename) {
+        self.scriptsavetodb(filename, directoryPath);
+        self.fs.unlink(self.path.join(directoryPath, filename), error => {
+          if (error) console.log(error);
+        });
+      });
     });
   }
 }
 
 module.exports = DataReadWrite;
+
+

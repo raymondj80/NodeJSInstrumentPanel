@@ -19,7 +19,7 @@
     };
 
     const socket = io();
-    socket.emit("logged-in");
+    socket.emit("logged-in", '<%= email %>');
 
     // On packet recieved update header/record functions
     socket.on('data', function (data) {
@@ -250,7 +250,7 @@
             },
             logout(event) {
                 event.preventDefault();
-                socket.emit("logged-out");
+                socket.emit("logged-out", '<%= email %>');
                 window.location.href = "/users/logout";
             }
         },

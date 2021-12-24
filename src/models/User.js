@@ -16,6 +16,13 @@ const UserSchema = new mongoose.Schema({
   date: {
     type: Date,
     default: Date.now
+  },
+  Scripts: {
+    type: [{
+      name: String,
+      script: String
+    }],
+    required: false
   }
 });
 

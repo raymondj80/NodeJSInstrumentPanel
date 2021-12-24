@@ -23,11 +23,11 @@ class BController {
     });
 
     self.io.on("connection", function (socket) {
-      socket.on("logged-in", function () {
-        self.setState(0, null);
+      socket.on("logged-in", function (email) {
+        self.setState(10, email);
       });
-      socket.on("logged-out", function () {
-        self.setState(-1, null);
+      socket.on("logged-out", function (email) {
+        self.setState(11, email);
       });
       socket.on("save-script", function (data) {
         self.setState(1, data);
@@ -81,14 +81,16 @@ class BController {
         this.state = 9;
         this.cnt += 1;
       } 
-      else if (this.state == -1) this.state = -1;
-      else if (this.state == 5) this.state = 5;
-      else if (this.state == 6) this.state = 6;
+      // else if (this.state == -1) this.state = -1;
+      // else if (this.state == 5) this.state = 5;
+      // else if (this.state == 6) this.state = 6;
       else if (this.state == 7) this.state = 6;
-      else {
-        this.state = 0;
-        this.data = null;
-      }
+      else if (this.state == 11) this.state = -1;
+      else if (this.state == 10 || this.state == 1 || this.state == 2 || this.state == 3) this.state = 0;
+      // else {
+      //   this.state = 0;
+      //   this.data = null;
+      // }
     }
     this.prev = this.state;
     return [this.state, this.data];
