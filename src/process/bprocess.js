@@ -66,6 +66,9 @@ async function backgroundLogic([state, packet]) {
   } else if (state === 11) {
     console.log("saving user session");
     data.saveOnLogout();
+  } else if (state === 12) {
+    console.log("deleting script");
+    data.deleteScript(packet);
   }
 
   data

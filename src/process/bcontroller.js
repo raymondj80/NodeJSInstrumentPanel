@@ -32,6 +32,9 @@ class BController {
       socket.on("save-script", function (data) {
         self.setState(1, data);
       });
+      socket.on("delete-script", function (name) {
+        self.setState(12, name);
+      });
       socket.on("get-script-names", function () {
         self.setState(2, null);
       });
@@ -86,6 +89,7 @@ class BController {
       // else if (this.state == 6) this.state = 6;
       else if (this.state == 7) this.state = 6;
       else if (this.state == 11) this.state = -1;
+      else if (this.state == 12) this.state = 2;
       else if (this.state == 10 || this.state == 1 || this.state == 2 || this.state == 3) this.state = 0;
       // else {
       //   this.state = 0;

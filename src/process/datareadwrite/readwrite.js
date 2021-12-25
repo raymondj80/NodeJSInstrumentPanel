@@ -115,6 +115,22 @@ class DataReadWrite {
     }
   }
 
+  async deleteScript(scriptname) {
+    const scriptPath = this.path.join(__dirname, "../../" + 'scripts');
+    this.Users.updateOne({_id: this.userid}, {
+      $pull: {
+        Scripts: {
+          name: scriptname 
+        }
+      }
+    }).then((res) => {
+      console.log(res);
+      this.fs.unlink(this.path.join(scriptPath, scriptname), error => {
+        if (error) console.log(error);
+      });
+    });
+  }
+
   async scriptsavetodb(filename, directoryPath) {
     const data = this.fs.readFileSync(this.path.join(directoryPath, filename), "utf8");
     this.Users.findByIdAndUpdate(this.userid, [ 

@@ -133,6 +133,9 @@
                             <b-button size="sm" variant="success" @click="loadScript">
                                 Load
                             </b-button>
+                            <b-button size="sm" variant="danger" @click="deleteScript">
+                                Delete
+                            </b-button>
                             <b-button size="sm" variant="danger" @click="cancel()">
                                 Cancel
                             </b-button>
@@ -243,6 +246,11 @@
                 this.$root.$emit('bv::hide::modal', 'load-script-modal');
                 this.my_script_name = this.selected_script;
                 socket.emit("get-script", this.selected_script);
+            },
+            deleteScript(event) {
+                event.preventDefault();
+                console.log(this.selected_script);
+                socket.emit("delete-script", this.selected_script);
             },
             runScript(event) {
                 event.preventDefault();
