@@ -1,6 +1,6 @@
 const path = require("path");
 const fs = require("fs");
-const json2csv = require("json2csv").parse;
+const { parseAsync } = require("json2csv");
 const csvtojson = require("csvtojson");
 
 var { spawn } = require("child_process");
@@ -15,7 +15,7 @@ var data;
 var controller;
 
 module.exports = function (io) {
-  data = new Data({ io, ee, path, fs, json2csv, csvtojson, spawn, Users });
+  data = new Data({ io, ee, path, fs, parseAsync, csvtojson, spawn, Users });
   controller = new Controller({ io, ee });
   controller.setIOListener();
 };

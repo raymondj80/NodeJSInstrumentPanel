@@ -1,5 +1,5 @@
 class DataReadWrite {
-  constructor({ io, ee, path, fs, json2csv, csvtojson, spawn, Users }) {
+  constructor({ io, ee, path, fs, parseAsync, csvtojson, spawn, Users }) {
     this.datapacket = {
       record_data: [],
       stream_data: [],
@@ -12,7 +12,7 @@ class DataReadWrite {
     this.ee = ee;
     this.path = path;
     this.fs = fs;
-    this.json2csv = json2csv;
+    this.json2csv = parseAsync;
     this.csvtojson = csvtojson;
     this.spawn = spawn;
     this.Users = Users;
@@ -131,8 +131,62 @@ class DataReadWrite {
     });
   }
 
-  async scriptsavetodb(filename, directoryPath) {
-    const data = this.fs.readFileSync(this.path.join(directoryPath, filename), "utf8");
+  async csvsavetodb(csvFile, csvPath) {
+    const csvpath = this.path.join(csvPath, csvFile);
+    console.log(csvpath);
+    this.csvtojson()
+      .fromFile(csvpath)
+      .then((jsonObj) => {
+        this.Users.findByIdAndUpdate(this.userid, [ 
+          { 
+              $set: { 
+                  Csvs: {
+                      $reduce: {
+                          input: { $ifNull: [ "$Csvs", [] ] }, 
+                          initialValue: { csvs: [], update: false },
+                          in: {
+                              $cond: [ { $eq: [ "$$this.name", csvFile ] },
+                                       { 
+                                         csvs: { 
+                                            $concatArrays: [
+                                                "$$value.csvs",
+                                                [ { name: "$$this.name", csv: jsonObj } ],
+                                            ] 
+                                          }, 
+                                          update: true
+                                       },
+                                       { 
+                                          csvs: { 
+                                             $concatArrays: [ "$$value.csvs", [ "$$this" ] ] 
+                                          }, 
+                                          update: "$$value.update" 
+                                       }
+                              ]
+                          }
+                      }
+                  }
+              }
+          },
+          { 
+              $set: { 
+                  Csvs: { 
+                      $cond: [ { $eq: [ "$Csvs.update", false ] },
+                               { $concatArrays: [ "$Csvs.csvs", [ {name: csvFile, csv: jsonObj} ] ] },
+                               { $concatArrays: [ "$Csvs.csvs", [] ] }
+                      ] 
+                  }
+              }
+          }
+        ]).then((res) => {
+          this.fs.unlink(this.path.join(csvPath, csvFile), error => {
+            if (error) console.log(error);
+        })
+        });
+      });
+  }
+
+  async scriptsavetodb(filename, scriptPath) {
+    const data = this.fs.readFileSync(this.path.join(scriptPath, filename), "utf8");
     this.Users.findByIdAndUpdate(this.userid, [ 
       { 
           $set: { 
@@ -174,23 +228,22 @@ class DataReadWrite {
           }
       }
     ]).then((res) => {
-      console.log(res.Scripts);
+      this.fs.unlink(this.path.join(scriptPath, filename), error => {
+        if (error) console.log(error);
+        });
     });
   }
 
   async retrieveUserID(user_email) {
-    console.log("retrieving user id");
     this.Users.findOne({email: user_email}).then((res) => {
       this.userid = res.id;
     })
   }
 
   async retrieveUserScripts(user_email, scriptPath) {
-    console.log("retrieving user scripts");
     this.Users.findOne({email: user_email}).then((res) => {
       var scripts = res.Scripts;
       scripts.forEach((script) => {
-        console.log(scriptPath);
           this.fs.writeFile(this.path.join(scriptPath, script.name), script.script, err => {
             if (err) console.log(err);
           });
@@ -198,26 +251,48 @@ class DataReadWrite {
     })
   }
 
+  async retrieveUserCsvs(user_email, csvPath) {
+    var self = this;
+    self.Users.findOne({email: user_email}).then((res) => {
+      var csvs = res.Csvs;
+      csvs.forEach((csv) => {
+        self.json2csv(csv.csv, { header: true })
+          .then((converted_csv) => 
+            self.fs.writeFile(self.path.join(csvPath, csv.name), converted_csv, fserr => {
+            if (fserr) console.log(fserr);
+          }))
+        })
+      });
+  }
+
   async loadOnLogin(user_email) {
     var self = this;
     const scriptPath = self.path.join(__dirname, "../../" + 'scripts');
-    console.log(scriptPath);
+    const csvPath = self.path.join(__dirname, "../../" + 'csv');
     self.retrieveUserID(user_email);
     self.retrieveUserScripts(user_email, scriptPath);
+    self.retrieveUserCsvs(user_email, csvPath);
   }
 
   async saveOnLogout() {
     var self = this;
-    const directoryPath = self.path.join(__dirname, "../../" + 'scripts');
-    self.fs.readdir(directoryPath, function (err, files) {
+    const scriptPath = self.path.join(__dirname, "../../" + 'scripts');
+    const csvPath = self.path.join(__dirname, "../../" + 'csv');
+    self.fs.readdir(scriptPath, function (err, files) {
       if (err) {
         return console.log('Unable to scan directory: ' + err);
       }
       files.forEach(function (filename) {
-        self.scriptsavetodb(filename, directoryPath);
-        self.fs.unlink(self.path.join(directoryPath, filename), error => {
-          if (error) console.log(error);
-        });
+        self.scriptsavetodb(filename, scriptPath);
+      });
+    });
+    self.fs.readdir(csvPath, function (err, files) {
+      if (err) {
+        return console.log('Unable to scan directory: ' + err);
+      }
+      files.forEach(async (filename) => {
+        console.log(filename);
+        self.csvsavetodb(filename, csvPath);
       });
     });
   }

@@ -17,6 +17,13 @@ const UserSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
+  Csvs: {
+    type: [{
+      name: String,
+      csv: []
+    }],
+    required: false
+  },
   Scripts: {
     type: [{
       name: String,
