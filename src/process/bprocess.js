@@ -2,11 +2,13 @@ const path = require("path");
 const fs = require("fs");
 const { parseAsync } = require("json2csv");
 const csvtojson = require("csvtojson");
+const {google} = require('googleapis');
 
 var { spawn } = require("child_process");
 const Users = require("../models/User.js");
 const Data = require("./datareadwrite/readwrite");
 const Controller = require("./bcontroller.js");
+
 
 var EventEmitter = require("events").EventEmitter;
 var ee = new EventEmitter();
@@ -15,7 +17,7 @@ var data;
 var controller;
 
 module.exports = function (io) {
-  data = new Data({ io, ee, path, fs, parseAsync, csvtojson, spawn, Users });
+  data = new Data({ io, ee, path, fs, parseAsync, csvtojson, spawn, Users, google });
   controller = new Controller({ io, ee });
   controller.setIOListener();
 };
@@ -54,6 +56,7 @@ async function backgroundLogic([state, packet]) {
     console.log("running script");
   } else if (state === 7) {
     console.log("stop recording");
+    data.uploadFile();
   } else if (state === 8) {
     console.log("finished script");
   } else if (state === 9) {
@@ -69,7 +72,14 @@ async function backgroundLogic([state, packet]) {
   } else if (state === 12) {
     console.log("deleting script");
     data.deleteScript(packet);
-  }
+  } else if (state == 13) {
+    console.log("authentication");
+    data.storeToken(packet);
+    data.authenticate();
+  } else if (state == 14) {
+    console.log("set folder id");
+    data.setFolderId(packet);
+  } 
 
   data
     .fetchInstrumentData()

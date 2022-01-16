@@ -50,6 +50,12 @@ class BController {
       socket.on("stop-manual-record", function () {
         self.setState(8, null);
       });
+      socket.on("authenticate", function(token) {
+        self.setState(13, token);
+      });
+      socket.on("upload", function(folderid) {
+        self.setState(14, folderid);
+      });
     });
   }
 
@@ -90,7 +96,7 @@ class BController {
       else if (this.state == 7) this.state = 6;
       else if (this.state == 11) this.state = -1;
       else if (this.state == 12) this.state = 2;
-      else if (this.state == 10 || this.state == 1 || this.state == 2 || this.state == 3) this.state = 0;
+      else if (this.state == 10 || this.state == 1 || this.state == 2 || this.state == 3 || this.state == 13 || this.state == 14) this.state = 0;
       // else {
       //   this.state = 0;
       //   this.data = null;

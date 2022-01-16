@@ -1,13 +1,19 @@
+const { google } = require("googleapis");
+const { io } = require("socket.io-client");
+
 class DataReadWrite {
-  constructor({ io, ee, path, fs, parseAsync, csvtojson, spawn, Users }) {
+  constructor({ io, ee, path, fs, parseAsync, csvtojson, spawn, Users, google }) {
     this.datapacket = {
       record_data: [],
       stream_data: [],
     };
     this.time = 0;
     this.userid = "";
+    this.folderid = "";
+    this.file = "";
     this.jsonData = null;
     this.state = null;
+    this.oauth2Client = null;
     this.socket = io;
     this.ee = ee;
     this.path = path;
@@ -36,8 +42,10 @@ class DataReadWrite {
 
   async writeToCSV(filename, foldername) {
     var self = this;
+    self.filename = filename;
     const folder = self.path.join(__dirname, "../../" + foldername);
     const file = self.path.join(folder, filename + ".csv");
+
     self._makefolder(folder);
 
     let rows;
@@ -241,6 +249,10 @@ class DataReadWrite {
   }
 
   async retrieveUserScripts(user_email, scriptPath) {
+    // Make folder if none exists
+    // this._makefolder(scriptPath);
+
+    // Retrieve user scripts
     this.Users.findOne({email: user_email}).then((res) => {
       var scripts = res.Scripts;
       scripts.forEach((script) => {
@@ -253,6 +265,10 @@ class DataReadWrite {
 
   async retrieveUserCsvs(user_email, csvPath) {
     var self = this;
+
+    // Make folder if none exists
+    // this._makefolder(csvPath);
+
     self.Users.findOne({email: user_email}).then((res) => {
       var csvs = res.Csvs;
       csvs.forEach((csv) => {
@@ -296,7 +312,60 @@ class DataReadWrite {
       });
     });
   }
+
+  async authenticate() {
+    const TOKEN_PATH = this.path.join(__dirname, process.env.TOKEN_PATH);
+
+    this.oauth2Client = new google.auth.OAuth2(
+      process.env.CLIENT_ID,
+      process.env.CLIENT_SECRET,
+      process.env.REDIRECT_URL
+    );
+    this.fs.readFile(TOKEN_PATH, (err, token) => {
+      if (err) return getAccessToken(this.oauth2Client);
+      this.oauth2Client.setCredentials(JSON.parse(token));
+    });
+  }
+
+  async storeToken(token) {
+    const TOKEN_PATH = this.path.join(__dirname, "../../secrets/token.json");
+    this.fs.writeFile(TOKEN_PATH, JSON.stringify(token), (err) => {
+      if (err) return console.log(err);
+      console.log(`Token stored to ${TOKEN_PATH}`);
+    })
+  }
+
+  async setFolderId(folderid) {
+    console.log(folderid);
+    this.folderid = folderid;
+  }
+
+  async uploadFile() {
+    const mydrive = google.drive({version: 'v3', auth: this.oauth2Client});
+    const testFilePath = this.path.join(__dirname, "../../", "csv", this.filename);
+    const fileMetaData = {
+        name: this.filename,
+        parents: [this.folderid],
+    };
+    const media = {
+      mimeType: "text/csv",
+      body: this.fs.createReadStream(testFilePath),
+    };
+    mydrive.files.create({
+        resource: fileMetaData,
+        media: media,
+        fields: "id",
+      }, (err, file) => {
+          if (err) console.log(err);
+          else {
+            console.log("File uploaded onto Google Drive");
+          }
+      });
+  }
+
 }
+
+
 
 module.exports = DataReadWrite;
 
