@@ -50,10 +50,10 @@ class BController {
       socket.on("stop-manual-record", function () {
         self.setState(8, null);
       });
-      socket.on("authenticate", function(token) {
+      socket.on("authenticate", function (token) {
         self.setState(13, token);
       });
-      socket.on("upload", function(folderid) {
+      socket.on("upload", function (folderid) {
         self.setState(14, folderid);
       });
     });
@@ -62,7 +62,7 @@ class BController {
   setState(val, data) {
     this.state = val;
     this.data = data;
-    // check data['time'] to get valid time 
+    // check data['time'] to get valid time
     if (data != null && data.constructor == Object && "time" in data) {
       this.time = this.data["time"];
     }
@@ -81,7 +81,7 @@ class BController {
       }
     } else {
       // if recording continue recording
-      if ((this.state == 9) && (this.cnt == this.time)) {
+      if (this.state == 9 && this.cnt == this.time) {
         this.state = 8;
         this.time = null;
         this.cnt = 1;
@@ -89,14 +89,23 @@ class BController {
       } else if (this.state == 9) {
         this.state = 9;
         this.cnt += 1;
-      } 
+      }
       // else if (this.state == -1) this.state = -1;
       // else if (this.state == 5) this.state = 5;
       // else if (this.state == 6) this.state = 6;
       else if (this.state == 7) this.state = 6;
       else if (this.state == 11) this.state = -1;
       else if (this.state == 12) this.state = 2;
-      else if (this.state == 10 || this.state == 1 || this.state == 2 || this.state == 3 || this.state == 13 || this.state == 14) this.state = 0;
+      else if (
+        this.state == 10 ||
+        this.state == 1 ||
+        this.state == 2 ||
+        this.state == 3 ||
+        this.state == 8 ||
+        this.state == 13 ||
+        this.state == 14
+      )
+        this.state = 0;
       // else {
       //   this.state = 0;
       //   this.data = null;

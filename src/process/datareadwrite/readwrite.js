@@ -1,8 +1,5 @@
-const { google } = require("googleapis");
-const { io } = require("socket.io-client");
-
 class DataReadWrite {
-  constructor({ io, ee, path, fs, parseAsync, csvtojson, spawn, Users, google }) {
+  constructor({ io, ee, path, fs, Parser, csvtojson, spawn, Users, google }) {
     this.datapacket = {
       record_data: [],
       stream_data: [],
@@ -10,7 +7,7 @@ class DataReadWrite {
     this.time = 0;
     this.userid = "";
     this.folderid = "";
-    this.file = "";
+    this.filename = "";
     this.jsonData = null;
     this.state = null;
     this.oauth2Client = null;
@@ -18,7 +15,8 @@ class DataReadWrite {
     this.ee = ee;
     this.path = path;
     this.fs = fs;
-    this.json2csv = parseAsync;
+    this.google = google;
+    this.json2csv = Parser;
     this.csvtojson = csvtojson;
     this.spawn = spawn;
     this.Users = Users;
@@ -42,20 +40,24 @@ class DataReadWrite {
 
   async writeToCSV(filename, foldername) {
     var self = this;
-    self.filename = filename;
     const folder = self.path.join(__dirname, "../../" + foldername);
     const file = self.path.join(folder, filename + ".csv");
-
+    self.filename = filename + ".csv";
     self._makefolder(folder);
 
     let rows;
     if (!self.fs.existsSync(file)) {
-      rows = self.json2csv(self.jsonData, { header: true });
+      const parser = new self.json2csv({ header: true });
+      rows = parser.parse(self.jsonData);
+      self.fs.appendFileSync(file, rows);
+      self.fs.appendFileSync(file, "\r\n");
     } else {
-      rows = self.json2csv(self.jsonData, { header: false });
+      const parser = new self.json2csv({ header: false });
+      rows = parser.parse(self.jsonData);
+      self.fs.appendFileSync(file, rows);
+      self.fs.appendFileSync(file, "\r\n");
     }
-    self.fs.appendFileSync(file, rows);
-    self.fs.appendFileSync(file, "\r\n");
+    console.log(rows);
   }
 
   async saveFile(filename, foldername, filedata) {
@@ -124,16 +126,19 @@ class DataReadWrite {
   }
 
   async deleteScript(scriptname) {
-    const scriptPath = this.path.join(__dirname, "../../" + 'scripts');
-    this.Users.updateOne({_id: this.userid}, {
-      $pull: {
-        Scripts: {
-          name: scriptname 
-        }
+    const scriptPath = this.path.join(__dirname, "../../" + "scripts");
+    this.Users.updateOne(
+      { _id: this.userid },
+      {
+        $pull: {
+          Scripts: {
+            name: scriptname,
+          },
+        },
       }
-    }).then((res) => {
+    ).then((res) => {
       console.log(res);
-      this.fs.unlink(this.path.join(scriptPath, scriptname), error => {
+      this.fs.unlink(this.path.join(scriptPath, scriptname), (error) => {
         if (error) console.log(error);
       });
     });
@@ -145,107 +150,124 @@ class DataReadWrite {
     this.csvtojson()
       .fromFile(csvpath)
       .then((jsonObj) => {
-        this.Users.findByIdAndUpdate(this.userid, [ 
-          { 
-              $set: { 
-                  Csvs: {
-                      $reduce: {
-                          input: { $ifNull: [ "$Csvs", [] ] }, 
-                          initialValue: { csvs: [], update: false },
-                          in: {
-                              $cond: [ { $eq: [ "$$this.name", csvFile ] },
-                                       { 
-                                         csvs: { 
-                                            $concatArrays: [
-                                                "$$value.csvs",
-                                                [ { name: "$$this.name", csv: jsonObj } ],
-                                            ] 
-                                          }, 
-                                          update: true
-                                       },
-                                       { 
-                                          csvs: { 
-                                             $concatArrays: [ "$$value.csvs", [ "$$this" ] ] 
-                                          }, 
-                                          update: "$$value.update" 
-                                       }
-                              ]
-                          }
-                      }
-                  }
-              }
+        this.Users.findByIdAndUpdate(this.userid, [
+          {
+            $set: {
+              Csvs: {
+                $reduce: {
+                  input: { $ifNull: ["$Csvs", []] },
+                  initialValue: { csvs: [], update: false },
+                  in: {
+                    $cond: [
+                      { $eq: ["$$this.name", csvFile] },
+                      {
+                        csvs: {
+                          $concatArrays: [
+                            "$$value.csvs",
+                            [{ name: "$$this.name", csv: jsonObj }],
+                          ],
+                        },
+                        update: true,
+                      },
+                      {
+                        csvs: {
+                          $concatArrays: ["$$value.csvs", ["$$this"]],
+                        },
+                        update: "$$value.update",
+                      },
+                    ],
+                  },
+                },
+              },
+            },
           },
-          { 
-              $set: { 
-                  Csvs: { 
-                      $cond: [ { $eq: [ "$Csvs.update", false ] },
-                               { $concatArrays: [ "$Csvs.csvs", [ {name: csvFile, csv: jsonObj} ] ] },
-                               { $concatArrays: [ "$Csvs.csvs", [] ] }
-                      ] 
-                  }
-              }
-          }
+          {
+            $set: {
+              Csvs: {
+                $cond: [
+                  { $eq: ["$Csvs.update", false] },
+                  {
+                    $concatArrays: [
+                      "$Csvs.csvs",
+                      [{ name: csvFile, csv: jsonObj }],
+                    ],
+                  },
+                  { $concatArrays: ["$Csvs.csvs", []] },
+                ],
+              },
+            },
+          },
         ]).then((res) => {
-          this.fs.unlink(this.path.join(csvPath, csvFile), error => {
+          this.fs.unlink(this.path.join(csvPath, csvFile), (error) => {
             if (error) console.log(error);
-        })
+          });
         });
       });
   }
 
   async scriptsavetodb(filename, scriptPath) {
-    const data = this.fs.readFileSync(this.path.join(scriptPath, filename), "utf8");
-    this.Users.findByIdAndUpdate(this.userid, [ 
-      { 
-          $set: { 
-              Scripts: {
-                  $reduce: {
-                      input: { $ifNull: [ "$Scripts", [] ] }, 
-                      initialValue: { scripts: [], update: false },
-                      in: {
-                          $cond: [ { $eq: [ "$$this.name", filename ] },
-                                   { 
-                                     scripts: { 
-                                        $concatArrays: [
-                                            "$$value.scripts",
-                                            [ { name: "$$this.name", script: data } ],
-                                        ] 
-                                      }, 
-                                      update: true
-                                   },
-                                   { 
-                                      scripts: { 
-                                         $concatArrays: [ "$$value.scripts", [ "$$this" ] ] 
-                                      }, 
-                                      update: "$$value.update" 
-                                   }
-                          ]
-                      }
-                  }
-              }
-          }
+    const data = this.fs.readFileSync(
+      this.path.join(scriptPath, filename),
+      "utf8"
+    );
+    this.Users.findByIdAndUpdate(this.userid, [
+      {
+        $set: {
+          Scripts: {
+            $reduce: {
+              input: { $ifNull: ["$Scripts", []] },
+              initialValue: { scripts: [], update: false },
+              in: {
+                $cond: [
+                  { $eq: ["$$this.name", filename] },
+                  {
+                    scripts: {
+                      $concatArrays: [
+                        "$$value.scripts",
+                        [{ name: "$$this.name", script: data }],
+                      ],
+                    },
+                    update: true,
+                  },
+                  {
+                    scripts: {
+                      $concatArrays: ["$$value.scripts", ["$$this"]],
+                    },
+                    update: "$$value.update",
+                  },
+                ],
+              },
+            },
+          },
+        },
       },
-      { 
-          $set: { 
-              Scripts: { 
-                  $cond: [ { $eq: [ "$Scripts.update", false ] },
-                           { $concatArrays: [ "$Scripts.scripts", [ {name: filename, script: data} ] ] },
-                           { $concatArrays: [ "$Scripts.scripts", [] ] }
-                  ] 
-              }
-          }
-      }
+      {
+        $set: {
+          Scripts: {
+            $cond: [
+              { $eq: ["$Scripts.update", false] },
+              {
+                $concatArrays: [
+                  "$Scripts.scripts",
+                  [{ name: filename, script: data }],
+                ],
+              },
+              { $concatArrays: ["$Scripts.scripts", []] },
+            ],
+          },
+        },
+      },
     ]).then((res) => {
-      this.fs.unlink(this.path.join(scriptPath, filename), error => {
+      this.fs.unlink(this.path.join(scriptPath, filename), (error) => {
         if (error) console.log(error);
-        });
+      });
     });
   }
 
   async retrieveUserID(user_email) {
-    this.Users.findOne({email: user_email}).then((res) => {
+    this.Users.findOne({ email: user_email }).then((res) => {
       this.userid = res.id;
-    })
+    });
   }
 
   async retrieveUserScripts(user_email, scriptPath) {
@@ -253,14 +275,18 @@ class DataReadWrite {
     // this._makefolder(scriptPath);
 
     // Retrieve user scripts
-    this.Users.findOne({email: user_email}).then((res) => {
+    this.Users.findOne({ email: user_email }).then((res) => {
       var scripts = res.Scripts;
       scripts.forEach((script) => {
-          this.fs.writeFile(this.path.join(scriptPath, script.name), script.script, err => {
+        this.fs.writeFile(
+          this.path.join(scriptPath, script.name),
+          script.script,
+          (err) => {
             if (err) console.log(err);
-          });
+          }
+        );
       });
-    })
+    });
   }
 
   async retrieveUserCsvs(user_email, csvPath) {
@@ -269,22 +295,26 @@ class DataReadWrite {
     // Make folder if none exists
     // this._makefolder(csvPath);
 
-    self.Users.findOne({email: user_email}).then((res) => {
+    self.Users.findOne({ email: user_email }).then((res) => {
       var csvs = res.Csvs;
       csvs.forEach((csv) => {
-        self.json2csv(csv.csv, { header: true })
-          .then((converted_csv) => 
-            self.fs.writeFile(self.path.join(csvPath, csv.name), converted_csv, fserr => {
-            if (fserr) console.log(fserr);
-          }))
-        })
+        self.json2csv(csv.csv, { header: true }).then((converted_csv) =>
+          self.fs.writeFile(
+            self.path.join(csvPath, csv.name),
+            converted_csv,
+            (fserr) => {
+              if (fserr) console.log(fserr);
+            }
+          )
+        );
       });
+    });
   }
 
   async loadOnLogin(user_email) {
     var self = this;
-    const scriptPath = self.path.join(__dirname, "../../" + 'scripts');
-    const csvPath = self.path.join(__dirname, "../../" + 'csv');
+    const scriptPath = self.path.join(__dirname, "../../" + "scripts");
+    const csvPath = self.path.join(__dirname, "../../" + "csv");
     self.retrieveUserID(user_email);
     self.retrieveUserScripts(user_email, scriptPath);
     self.retrieveUserCsvs(user_email, csvPath);
@@ -292,11 +322,11 @@ class DataReadWrite {
 
   async saveOnLogout() {
     var self = this;
-    const scriptPath = self.path.join(__dirname, "../../" + 'scripts');
-    const csvPath = self.path.join(__dirname, "../../" + 'csv');
+    const scriptPath = self.path.join(__dirname, "../../" + "scripts");
+    const csvPath = self.path.join(__dirname, "../../" + "csv");
     self.fs.readdir(scriptPath, function (err, files) {
       if (err) {
-        return console.log('Unable to scan directory: ' + err);
+        return console.log("Unable to scan directory: " + err);
       }
       files.forEach(function (filename) {
         self.scriptsavetodb(filename, scriptPath);
@@ -304,7 +334,7 @@ class DataReadWrite {
     });
     self.fs.readdir(csvPath, function (err, files) {
       if (err) {
-        return console.log('Unable to scan directory: ' + err);
+        return console.log("Unable to scan directory: " + err);
       }
       files.forEach(async (filename) => {
         console.log(filename);
@@ -316,7 +346,7 @@ class DataReadWrite {
   async authenticate() {
     const TOKEN_PATH = this.path.join(__dirname, process.env.TOKEN_PATH);
 
-    this.oauth2Client = new google.auth.OAuth2(
+    this.oauth2Client = new this.google.auth.OAuth2(
       process.env.CLIENT_ID,
       process.env.CLIENT_SECRET,
       process.env.REDIRECT_URL
@@ -332,7 +362,7 @@ class DataReadWrite {
     this.fs.writeFile(TOKEN_PATH, JSON.stringify(token), (err) => {
       if (err) return console.log(err);
       console.log(`Token stored to ${TOKEN_PATH}`);
-    })
+    });
   }
 
   async setFolderId(folderid) {
@@ -341,32 +371,38 @@ class DataReadWrite {
   }
 
   async uploadFile() {
-    const mydrive = google.drive({version: 'v3', auth: this.oauth2Client});
-    const testFilePath = this.path.join(__dirname, "../../", "csv", this.filename);
+    const mydrive = this.google.drive({
+      version: "v3",
+      auth: this.oauth2Client,
+    });
+    const testFilePath = this.path.join(
+      __dirname,
+      "../../",
+      "csv",
+      this.filename
+    );
     const fileMetaData = {
-        name: this.filename,
-        parents: [this.folderid],
+      name: this.filename,
+      parents: [this.folderid],
     };
     const media = {
       mimeType: "text/csv",
       body: this.fs.createReadStream(testFilePath),
     };
-    mydrive.files.create({
+    mydrive.files.create(
+      {
         resource: fileMetaData,
         media: media,
         fields: "id",
-      }, (err, file) => {
-          if (err) console.log(err);
-          else {
-            console.log("File uploaded onto Google Drive");
-          }
-      });
+      },
+      (err, file) => {
+        if (err) console.log(err);
+        else {
+          console.log("File uploaded onto Google Drive");
+        }
+      }
+    );
   }
-
 }
 
-
-
 module.exports = DataReadWrite;
-
-
