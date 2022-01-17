@@ -272,7 +272,7 @@ class DataReadWrite {
 
   async retrieveUserScripts(user_email, scriptPath) {
     // Make folder if none exists
-    // this._makefolder(scriptPath);
+    this._makefolder(scriptPath);
 
     // Retrieve user scripts
     this.Users.findOne({ email: user_email }).then((res) => {
@@ -293,19 +293,19 @@ class DataReadWrite {
     var self = this;
 
     // Make folder if none exists
-    // this._makefolder(csvPath);
+    this._makefolder(csvPath);
 
     self.Users.findOne({ email: user_email }).then((res) => {
       var csvs = res.Csvs;
-      csvs.forEach((csv) => {
-        self.json2csv(csv.csv, { header: true }).then((converted_csv) =>
-          self.fs.writeFile(
-            self.path.join(csvPath, csv.name),
-            converted_csv,
-            (fserr) => {
-              if (fserr) console.log(fserr);
-            }
-          )
+      csvs.forEach((csv_json) => {
+        const parser = new self.json2csv({ header: true });
+        const csv = parser.parse(csv_json.csv);
+        self.fs.writeFile(
+          self.path.join(csvPath, csv_json.name),
+          csv,
+          (fserr) => {
+            if (fserr) console.log(fserr);
+          }
         );
       });
     });
