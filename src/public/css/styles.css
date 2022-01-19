@@ -5,6 +5,9 @@
 
   font-family: "Fira sans", sans-serif;
 }
+::-webkit-scrollbar {
+  display: none;
+}
 
 html,
 body {
@@ -25,20 +28,45 @@ body {
   max-width: 100%;
   height: 100%;
 }
+/* 
+.jumbotron {
+  background-color: #fff;
+} */
 
 .app {
   min-width: 100%;
-  min-height: 100%;
+  height: 100%;
+  background-color: #fff;
+  /* background-image: linear-gradient(to bottom right, #2f4960 10%, #102040); */
+}
+
+
+.navbar {
+  height: 60px;
   background-image: linear-gradient(to bottom right, #2f4960 10%, #102040);
+  color: #fff;
 }
 
 .container {
-  min-width: 95%;
+  width: 100%;
+}
+
+.jumbotron {
+  background-color: #fff;
+}
+
+.graphs-container {
+  height: 35%;
+}
+
+.charts {
+  width: 90%;
+  margin-left: 50px;
 }
 
 .my-container {
-  min-width: 80%;
-  min-height: 100%;
+  width: 100%;
+  min-height: calc(100% - 60px);
   background-color: #fff;
 }
 

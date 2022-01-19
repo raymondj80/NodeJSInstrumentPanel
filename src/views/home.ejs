@@ -26,6 +26,7 @@
 
     // On packet recieved update header/record functions
     socket.on('data', function (data) {
+        console.log(data);
         updateHeader(data);
     });
 
@@ -63,11 +64,11 @@
 
 
     <b-navbar toggleable="lg" type="dark" variant="dark">
+        <b-navbar-brand href="#">ControlPanel</b-navbar-brand>
         <b-collapse id="nav-collapse" is-nav>
             <b-navbar-nav>
                 <b-nav-item href="/home">Home</b-nav-item>
                 <b-nav-item href="/graphs">Graphs</b-nav-item>
-                <b-nav-item href="/gd">Google Drive</b-nav-item>
             </b-navbar-nav>
 
             <!-- Right aligned nav items -->
@@ -86,11 +87,9 @@
     </b-navbar>
 
     <b-container class="my-container">
-        <b-container class="b-jumbotron">
-            <b-jumbotron header="Control Panel" lead="Node.js control panel for PPMS and SR860 Lock-in">
+            <b-jumbotron header="Dashboard" lead="Node.js control panel for PPMS and SR860 Lock-in">
+                <hr class="my-4">
             </b-jumbotron>
-        </b-container>
-
         <b-container class="data-row">
             <b-row class="text-left">
                 <b-col style="white-space:nowrap">
@@ -139,9 +138,6 @@
                             </b-button>
                             <b-button size="sm" variant="danger" @click="deleteScript">
                                 Delete
-                            </b-button>
-                            <b-button size="sm" variant="danger" @click="cancel()">
-                                Cancel
                             </b-button>
                         </template>
                     </b-modal>
@@ -197,9 +193,13 @@
 
 
 <script>
-    var developerKey = 'AIzaSyDWpKfzB9fTS16iTBg0FqT7_kRr0fq0rRI';
-    var clientId = '869904555675-kpje9fhnaoncru44ekg1ucgnvsa5cjlm.apps.googleusercontent.com';
-    var appId = '869904555675';
+    // var developerKey = 'AIzaSyDWpKfzB9fTS16iTBg0FqT7_kRr0fq0rRI';
+    // var clientId = '869904555675-kpje9fhnaoncru44ekg1ucgnvsa5cjlm.apps.googleusercontent.com';
+    var developerKey = "<%= devKey %>";
+    console.log(developerKey);
+    var clientId = "<%= clientId %>";
+    var appId = "<%= appId %>";
+    console.log(clientId);
     var scope = [
         'https://www.googleapis.com/auth/drive'
     ];

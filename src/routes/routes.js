@@ -11,6 +11,9 @@ router.get('/home', ensureAuthenticated, (req, res) =>
   res.render('home', {
     name: req.user.name,
     email: req.user.email,
+    devKey: process.env.DEV_KEY,
+    clientId: process.env.CLIENT_ID_AUTH,
+    appId: process.env.APP_ID,
   })
 );
 
@@ -22,12 +25,12 @@ router.get('/gd', ensureAuthenticated, (req, res) =>
   })
 );
 
-// // Control Panel Home Page
-// router.get('/home1', ensureAuthenticated, (req, res) =>
-//   res.render('home1', {
-//     name: req.user.name,
-//     email: req.user.email
-//   })
-// );
+// Graphs Page
+router.get('/graphs', ensureAuthenticated, (req, res) => 
+  res.render('graphs', {
+      name: req.user.name,
+      email: req.user.email,
+  })
+);
 
 module.exports = router;
