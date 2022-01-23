@@ -6,14 +6,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-
     <!-- Required Stylesheets -->
     <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css" />
     <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css" />
-
     <!-- Load polyfills to support older browsers -->
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es2015%2CIntersectionObserver"></script>
-
     <!-- Required scripts -->
     <script src="https://unpkg.com/vue@latest/dist/vue.js"></script>
     <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
@@ -21,8 +18,8 @@
     <script src='/socket.io/socket.io.js'></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/0.9.90/jsrender.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 </head>
-
 <style>
     body {
         background: white;
@@ -102,29 +99,26 @@
 </style>
 
 <body>
-
     <b-container>
-
         <div id="top_banner">
             <div>
                 <header>Login to the Control Panel</header>
             </div>
         </div>
-
         <div class="container mt-5">
             <div class="row d-flex justify-content-center">
                 <div class="col-md-6" id="login_container">
                     <div class="card px-5 py-5" id="form1">
                         <div class="form-data" v-if="!submitted">
                             <div class="forms-inputs mb-4"> <span>Email</span> <input autocomplete="off" type="text"
-                                    v-model="email"
-                                    v-bind:class="{'form-control':true, 'is-invalid' : !validEmail(email) && emailBlured}"
+                                    v-model="form.email"
+                                    v-bind:class="{'form-control':true, 'is-invalid' : !validEmail(form.email) && emailBlured}"
                                     v-on:blur="emailBlured = true">
                                 <div class="invalid-feedback">A valid email is required!</div>
                             </div>
                             <div class="forms-inputs mb-4"> <span>Password</span> <input autocomplete="off"
-                                    type="password" v-model="password"
-                                    v-bind:class="{'form-control':true, 'is-invalid' : !validPassword(password) && passwordBlured}"
+                                    type="password" v-model="form.password"
+                                    v-bind:class="{'form-control':true, 'is-invalid' : !validPassword(form.password) && passwordBlured}"
                                     v-on:blur="passwordBlured = true">
                                 <div class="invalid-feedback">Password must be 8 character!</div>
                             </div>
@@ -139,15 +133,14 @@
                         <div>
                             <br>
                             <p style="margin-left: 48%"> or </p>
-                            <b-button block variant="warning" class="btn w-100" href="/signup">Sign Up </b-button>
+                            <b-button block variant="warning" class="btn w-100" href="/users/register">Sign Up
+                            </b-button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
     </b-container>
-
     <script>
         var app = new Vue({
             el: '#form1',
@@ -187,17 +180,24 @@
                     }
                 },
 
+
                 submit: function () {
                     this.validate();
                     if (this.valid) {
                         this.submitted = true;
-                        socket.emit("new-account", this.new);
+                        console.log(this.form)
+                        axios.post('http://localhost:3000/users/login', this.form)
+                            .then(function (response) {
+                                window.location.href = response.request.responseURL
+                            })
+                            .catch(err => {
+                                console.log(err);
+                            });
                     }
-                }
-            }
+                };
+            };
         });
     </script>
-
 </body>
 
 </html>

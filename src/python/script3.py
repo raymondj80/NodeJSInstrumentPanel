@@ -1,3 +1,4 @@
+  
 # from script2 import my_QD
 import sys
 import json
@@ -65,6 +66,13 @@ for i in range(1,int(sys.argv[-1])):
     if order == 'Ramp_to_temp':
         my_QD.set_temperature(temperature = value, rate = rate, mode = modeDict[mode])
     elif order == 'Ramp_to_mag':
+<<<<<<< HEAD
+<<<<<<< HEAD
+        my_QD.set_field(value, rate, modeDict[mode], 0)
+=======
+=======
+>>>>>>> da8b409438dd6a2cc3d985a4d68019b14c028b4c
         my_QD.set_field(field = value, rate = rate, mode = modeDict[mode])
 
     
+>>>>>>> da8b409438dd6a2cc3d985a4d68019b14c028b4c

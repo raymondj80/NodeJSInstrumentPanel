@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('header'); -%>
+
+
+    <body>
+
+        <div id="app">
+            <%- include('navbar'); -%>
+
+                <b-container>
+                    <b-jumbotron header="Control Panel" lead="Node.js control panel for PPMS and SR860 Lock-in">
+                        <hr class="my-4">
+                    </b-jumbotron>
+                </b-container>
+
+                <b-container class="data-row">
+                    <b-row class="text-center">
+                        <b-col style="white-space:nowrap">
+                            <h4>Temperature: <span id='temp-header'></span></h4>
+                            <h4>Vx1: <span id='Vx1-header'></span></h4>
+                            <h4>Vx2: <span id='Vx2-header'></span></h4>
+                        </b-col>
+                        <b-col style="white-space:nowrap">
+                            <h4>Temperature State: <span id='temp_state-header'></span></h4>
+                            <h4>Vy1: <span id='Vy1-header'></span></h4>
+                            <h4>Vy2: <span id='Vy2-header'></span></h4>
+                        </b-col>
+                        <b-col style="white-space:nowrap">
+                            <h4>Field: <span id='field-header'></span></h4>
+                            <h4>Frequency1: <span id='freq1-header'></span></h4>
+                            <h4>Frequency2: <span id='freq2-header'></span></h4>
+                        </b-col>
+                        <b-col style="white-space:nowrap">
+                            <h4>Field State: <span id='field_state-header'></span></h4>
+                            <h4>Theta1: <span id='theta1-header'></span></h4>
+                            <h4>Theta2: <span id='theta2-header'></span></h4>
+                        </b-col>
+                    </b-row>
+                </b-container>
+
+                <!-- New Additions -->
+                <b-container>
+                    <hr class="my-4">
+                    <div>
+                        <h2>Orders</h2>
+                    </div>
+                    <div>
+                        <b-button v-b-modal.modal-lg variant="primary" @click="display_function_div_container()">Send
+                            Orders
+                        </b-button>
+                        <b-modal id="modal-lg" size="lg" title="Send Orders" hide-header-close>
+                            <div>
+
+                                <div id="function_button_container">
+                                    <div id="function_buttons">
+                                        <b-button onclick="display_function_div('temp_Div')"
+                                            class="my-4 function_button">Ramp
+                                            to Temperature</b-button>
+                                        <br>
+                                        <b-button onclick="display_function_div('mag_Div')"
+                                            class="my-4 function_button">Apply
+                                            Magnetic Field</b-button>
+                                        <br>
+                                        <b-button class="my-4 function_button">Function 3 that does <br> a thing
+                                        </b-button>
+                                        <br>
+                                        <b-button class="my-4 function_button">Function 4</b-button>
+                                        <br>
+                                        <b-button class="my-4 function_button">Function 5</b-button>
+                                        <br>
+                                        <b-button class="my-4 function_button">Function 6</b-button>
+                                        <br>
+                                        <b-button class="my-4 function_button">Function 7</b-button>
+                                        <br>
+                                        <b-button class="my-4 function_button">Function 8</b-button>
+                                        <br>
+                                        <b-button class="my-4 function_button">Function 9</b-button>
+                                        <br>
+                                        <b-button class="my-4 function_button">Function 10</b-button>
+                                        <br>
+                                        <b-button class="my-4 function_button">Function 11</b-button>
+                                    </div>
+                                </div>
+                                <div id="temp_Div" class="func_Div">
+                                    <form id="temp_form" name="temp_form">
+                                        <div class="top-func-div">
+                                            <label for="target_temp"><strong>Target Temperature:</strong></label>
+                                            <input id="target_temp" name="target_temp" type="text">
+                                        </div>
+                                        <br>
+                                        <div>
+                                            <label for="temp_rate"><strong>Rate:</strong></label>
+                                            <input id="temp_rate" name="temp_rate" type="text" placeholder="10.00 K/m">
+                                            <label for="temp_mode"><strong>Mode:</strong></label>
+                                            <select id="temp_mode" name="temp_mode" type="text">
+                                                <option value="Fast">Fast</option>
+                                                <option value="No Overshoot">No Overshoot</option>
+                                                <option value="Sweep">Sweep</option>
+                                            </select>
+                                        </div>
+                                        <div class="bottom-func-div">
+                                            <button @click="onSubmit_Temp">Apply</button>
+                                        </div>
+                                        <!-- Acceptable modes: Fast, No Overshoot, and Sweep  -->
+                                    </form>
+                                </div>
+                                <br>
+                                <div id="mag_Div" class="func_Div">
+                                    <form id="mag_form" name="mag_form">
+                                        <div class="top-func-div">
+                                            <label for="target_mag"><strong>Target Magnetic Field:</strong></label>
+                                            <input id="target_mag" name="target_mag" type="text">
+                                        </div>
+                                        <br>
+                                        <div>
+                                            <label for="mag_rate"><strong>Rate:</strong></label>
+                                            <input id="mag_rate" name="mag_rate" type="text" placeholder="200 G/m?">
+                                            <label for="mag_mode"><strong>Mode:</strong></label>
+                                            <select id="mag_mode" name="mag_mode" type="text">
+                                                <option value="Linear">Linear</option>
+                                                <option value="Oscillate">Oscillate</option>
+                                            </select>
+                                        </div>
+                                        <div class="bottom-func-div">
+                                            <button @click="onSubmit_Mag">Apply</button>
+                                        </div>
+                                        <!-- Acceptable modes: Linear and Oscillate -->
+                                    </form>
+                                </div>
+                                <br>
+                                <div id="error_div">
+                                    <p><strong>Invaled Parameters Inputted</strong></p>
+                                </div>
+
+                                <div id="set_functions_container_cont">
+                                    <div id="set_functions_container">
+                                        <b-container class="record-input">
+                                            <div>
+                                                <hr class="my-4">
+                                                <h2>Log</h2>
+                                                <ul style="list-style-type:none;" id='function_log'></ul>
+                                            </div>
+                                        </b-container>
+                                    </div>
+                                </div>
+                            </div>
+                            <template #modal-footer="{ ok, cancel, hide }">
+                                <b>Submit</b>
+                                <!-- Emulate built in modal footer ok and cancel button actions -->
+                                <b-button size="sm" variant="primary" @click="ok(); onSubmit_order()">
+                                    OK
+                                </b-button>
+                                <b-button size="sm" variant="danger" @click="cancel(); hide_function_div_container()">
+                                    Cancel
+                                </b-button>
+                            </template>
+                        </b-modal>
+                    </div>
+                </b-container>
+                <!-- End of New Additions -->
+
+                <b-container class="record-input">
+                    <hr class="my-4">
+                    <div>
+                        <h2>Record</h2>
+                    </div>
+                    <div>
+                        <b-form>
+                            <b-input-group class="record-inputs">
+                                <b-form-input id="record-time" v-model="time" type="text" placeholder="HH:mm:ss"
+                                    required>
+                                </b-form-input>
+                                <b-input-group-append>
+                                    <b-button-group>
+                                        <b-button @click="onStart" variant="outline-success">Start</b-button>
+                                        <b-button @click="onStop" variant="outline-danger">Stop</b-button>
+                                    </b-button-group>
+                                </b-input-group-append>
+                            </b-input-group>
+                        </b-form>
+                    </div>
+                </b-container>
+
+                <b-container class="record-input2">
+                    <hr class="my-4">
+                    <div>
+                        <h2 style=" text-align: left; display: inline-block; width: 75%;  margin-right: -50%;">
+                            Log</h2>
+                        <div style=" float: right; margin-left: -50%;">
+                            <b-button @click="resetLog" variant="outline-warning">Clear</b-button>
+                        </div>
+                    </div>
+                    <ul style="list-style-type:none;" id='messages'></ul>
+                </b-container>
+        </div>
+        
+        <script>
+            window.app = new Vue({
+                el: '#app',
+                data: {
+                    name: '',
+                    time: '',
+                    visibilities: {
+                        functions_div: {
+                            'DIV_ON': false,
+                            'error_div': false,
+                            'temp_Div': false,
+                            "mag_Div": false,
+                        },
+                    },
+                    set_functions: [],
+                },
+                mounted: function () {
+                    var d = document.getElementById("messages");
+                    d.outerHTML = sessionStorage.logHtml;
+                },
+                methods: {
+
+                    display_function_div_container() {
+                        window.app.visibilities.functions_div["DIV_ON"] = true;
+                    },
+                    hide_function_div_container() {
+                        window.app.visibilities.functions_div["DIV_ON"] = false;
+                    },
+                    log(message) {
+                        var item = document.createElement('li');
+                        const now = new Date();
+                        item.textContent = ['[', now.toUTCString(), '] ', message].join('');
+                        messages.appendChild(item);
+                        sessionStorage.logHtml = document.getElementById("messages").outerHTML;
+                    },
+                    resetLog() {
+                        sessionStorage.setItem('logHtml', "<ul id=\'messages\' style=\'list-style-type: none;\'></ul>");
+                        var d = document.getElementById("messages");
+                        d.outerHTML = sessionStorage.logHtml;
+                    },
+                    onStart(event) {
+                        event.preventDefault()
+                        this.start_recording = true;
+                        sessionStorage.streamData = JSON.stringify([]);
+                        sessionStorage.cnt = '0';
+                        socket.emit("record-state", [this.time.split(':'), this.start_recording, this.stop_recording]);
+                        this.start_recording = false;
+                    },
+                    onStop(event) {
+                        event.preventDefault()
+                        this.stop_recording = true;
+                        socket.emit("record-state", [this.time.split(':'), this.start_recording, this.stop_recording]);
+                        this.stop_recording = false;
+                    },
+                    onSubmit_order() {
+                        if (this.set_functions.length === 0) {
+                            console.log("error1");
+                        } else if (document.getElementById("error_div").style.display === "block") {
+                            console.log("error2");
+                        } else {
+                            event.preventDefault();
+                            window.app.visibilities.functions_div["DIV_ON"] = false;
+                            var Set_Functions = this.set_functions;
+                            socket.emit('order', this.set_functions);
+                            // console.log(this.set_functions);
+                            //
+                            console.log("Emitting Order")
+                            this.set_functions = '';
+                        }
+                    },
+                    onSubmit_Temp() {
+                        event.preventDefault();
+                        var item = document.createElement('li');
+                        item.style.position = 'relative';
+                        item.style.margin = "3px";
+
+                        var t = document.getElementsByName("target_temp")[0].value.trim();
+                        var r = document.getElementsByName("temp_rate")[0].value.trim();
+                        var m = document.getElementsByName("temp_mode")[0].value.trim();
+
+                        if (is_Valid_Number(t, 1.7, 400, 'error_div')) {
+                            if (is_Valid_Number(r, 0, 10, 'error_div')) {
+                                item.textContent = "Ramp to " + t + " Kelvin at " + r + " K/m and " + m + " mode.";
+                                function_log.appendChild(item);
+
+                                this.set_functions.push(
+                                    {
+                                        Order: "Ramp_to_temp",
+                                        Temp: t,
+                                        Rate: r,
+                                        Mode: m,
+                                    }
+                                );
+                            }
+                        }
+                    },
+                    onSubmit_Mag() {
+                        event.preventDefault();
+                        var item = document.createElement('li');
+                        item.style.position = 'relative';
+                        item.style.margin = '3px';
+
+                        var t = document.getElementsByName("target_mag")[0].value.trim();
+                        var r = document.getElementsByName("mag_rate")[0].value.trim();
+                        var m = document.getElementsByName("mag_mode")[0].value.trim();
+
+                        if (is_Valid_Number(t, 0, 9, 'error_div')) {
+                            if (is_Valid_Number(r, 0, 200, 'error_div')) {
+                                item.textContent = "Apply " + t + " T magnetic field at " + r + " G/m and " + m + ' mode.';
+                                function_log.appendChild(item);
+
+                                this.set_functions.push(
+                                    {
+                                        Order: "Ramp_to_mag",
+                                        Mag: t,
+                                        Rate: r,
+                                        Mode: m,
+                                    }
+                                );
+                            }
+                        }
+                    },
+
+                },
+                computed: {
+                    showAlert() {
+                        return this.name.length > 4 ? true : false
+                    }
+                }
+            })
+
+            // Swap visibility
+            var function_div_list = ["temp_Div", "mag_Div"];
+
+            function display_function_div(ID) {
+                if (window.app.visibilities.functions_div["DIV_ON"]) {
+                    document.getElementById('error_div').style.display = 'none';
+                    for (i = 0; i < function_div_list.length; ++i) {
+                        if (function_div_list[i] === ID) {
+                            Swap_Visibility(ID);
+                        } else {
+                            x = document.getElementById(function_div_list[i]);
+                            x.style.display = "none";
+                        }
+                    }
+                }
+            }
+
+            function Swap_Visibility(ID) {
+                var x = document.getElementById(ID);
+                if (x.style.display === "block") {
+                    x.style.display = "none";
+                } else {
+                    x.style.display = "block";
+                }
+            }
+
+            function is_Valid_Number(num, lower_bound, upper_bound, ERROR_ID) {
+                if (!isNaN(num) && num.length > 0) {
+                    if (num < lower_bound || num > upper_bound) {
+                        if (document.getElementById(ERROR_ID).style.display === "none") {
+                            Swap_Visibility(ERROR_ID);
+                        }
+                        return false
+                    } else {
+                        if (document.getElementById(ERROR_ID).style.display === "block") {
+                            Swap_Visibility(ERROR_ID);
+                        }
+                        return true
+                    }
+                } else {
+                    if (document.getElementById(ERROR_ID).style.display === "none") {
+                        Swap_Visibility(ERROR_ID);
+                    }
+                    return false
+                }
+            }
+        </script>
+    </body>
+
+</html>
