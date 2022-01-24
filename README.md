@@ -16,7 +16,7 @@ Julia Mundy
 
 1. Setup the [MongoDB Atlas Database](https://docs.atlas.mongodb.com/getting-started/)
 2. Setup the [Google Picker API](https://developers.google.com/picker/docs/)
-3. Paste the appropriate keys and URIs in a .env file with the following format
+3. Paste the appropriate keys and URIs in a .env file in the root directory with the following format
     ```
     # NodeJS
     PORT =
