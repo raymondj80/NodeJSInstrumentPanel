@@ -1,7 +1,11 @@
-src/secrets/**
-src/data/**
+#dependencies
+/node_modules
+
+#misc
+*.env
 .DS_Store
-node_modules/**
-src/.env
+
+#user
 src/scripts/**
+src/secrets/**
 src/csv/**
