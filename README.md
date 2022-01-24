@@ -1,7 +1,7 @@
 # NodeJSInstrumentPanel
 
 # NJSControl: NodeJS Instrument Control Panel
-A Node.js Express Web Framework control panel for lab measurement communication, data collection and visualization, and google drive cloud storage using the asynchronous event loop.
+A Node.js Express Web Framework control panel for lab instrument communication, data collection and visualization, and google drive cloud storage using the asynchronous event loop.
 
 Harvard University Dept. of Physics, Mundy Lab
 
