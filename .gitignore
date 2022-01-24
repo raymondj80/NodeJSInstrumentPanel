@@ -1,3 +1,7 @@
-/node_modules/*
-.vscode
-/src/scripts/*
+src/secrets/**
+src/data/**
+.DS_Store
+node_modules/**
+src/.env
+src/scripts/**
+src/csv/**
