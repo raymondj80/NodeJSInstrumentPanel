@@ -1,32 +1,50 @@
-<script src="https://unpkg.com/vue@latest/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
 <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
 <script src='/socket.io/socket.io.js'></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/0.9.90/jsrender.min.js"></script>
 <script type="text/javascript" src="https://apis.google.com/js/api.js?onload=loadPicker"></script>
 
+<script>
+    //instantiate sessionStorage Objects
+    if (!sessionStorage.log) {
+        sessionStorage.setItem('log', '');
+    }
+    if (!sessionStorage.logHtml) {
+        sessionStorage.setItem('logHtml', "<ul id=\'messages\' style=\'list-style-type: none;\'></ul>");
+    }
+    if (!sessionStorage.script_name) {
+        sessionStorage.setItem('script_name', '');
+    }
+    if (!sessionStorage.script_content) {
+        sessionStorage.setItem('script_content', '');
+    }
+
+</script>
+
 
 <script>
     // update headers 
     function updateHeader(data) {
         for (var key in data) {
-            // console.log(key);
             if (typeof data[key] === "number") {
-                // round to 9 decimal places
-                document.getElementById(key.concat('-header')).innerHTML = data[key].toFixed(9);
+                // round to 4 decimal places
+                document.getElementById(key.concat('-header')).innerHTML = data[key].toFixed(6);
             }
             else {
                 document.getElementById(key.concat('-header')).innerHTML = data[key];
             }
         };
     };
+</script>
 
+<script>
+    // Instantiate socket object and emit logged in message
     const socket = io();
     socket.emit("logged-in", '<%= email %>');
 
-    // On packet recieved update header/record functions
+    // On packet received functions to communicate with backend server
     socket.on('data', function (data) {
-        console.log(data);
         updateHeader(data);
     });
 
@@ -48,18 +66,16 @@
 
     socket.on('returned_script_names', function (script_names) {
         window.app.options = script_names;
-    })
+    });
 
     socket.on('returned_script', function (script) {
         window.app.my_script = script;
-    })
+    });
 
     socket.on('finished_recording', function () {
         window.app.log('Finished manual recording.');
-    })
+    });
 </script>
-
-
 <div id="app" class="app">
 
 
@@ -87,25 +103,25 @@
     </b-navbar>
 
     <b-container class="my-container">
-            <b-jumbotron header="Dashboard" lead="Node.js control panel for PPMS and SR860 Lock-in">
-                <hr class="my-4">
-            </b-jumbotron>
+        <b-jumbotron header="Dashboard" lead="Node.js control panel for PPMS and SR860 Lock-in">
+            <hr class="my-4">
+        </b-jumbotron>
         <b-container class="data-row">
             <b-row class="text-left">
                 <b-col style="white-space:nowrap">
-                    <h4>Temperature: <span id='temp-header'></span></h4>
+                    <h4>Temp: <span id='temp-header'></span></h4>
                     <h4>Vx1: <span id='Vx1-header'></span></h4>
                     <h4>Vx2: <span id='Vx2-header'></span></h4>
                 </b-col>
                 <b-col style="white-space:nowrap">
-                    <h4>Temperature State: <span id='temp_state-header'></span></h4>
+                    <h4>Temp State: <span id='temp_state-header'></span></h4>
                     <h4>Vy1: <span id='Vy1-header'></span></h4>
                     <h4>Vy2: <span id='Vy2-header'></span></h4>
                 </b-col>
                 <b-col style="white-space:nowrap">
                     <h4>Field: <span id='field-header'></span></h4>
-                    <h4>Frequency1: <span id='freq1-header'></span></h4>
-                    <h4>Frequency2: <span id='freq2-header'></span></h4>
+                    <h4>Freq1: <span id='freq1-header'></span></h4>
+                    <h4>Freq2: <span id='freq2-header'></span></h4>
                 </b-col>
                 <b-col style="white-space:nowrap">
                     <h4>Field State: <span id='field_state-header'></span></h4>
@@ -193,13 +209,9 @@
 
 
 <script>
-    // var developerKey = 'AIzaSyDWpKfzB9fTS16iTBg0FqT7_kRr0fq0rRI';
-    // var clientId = '869904555675-kpje9fhnaoncru44ekg1ucgnvsa5cjlm.apps.googleusercontent.com';
     var developerKey = "<%= devKey %>";
-    console.log(developerKey);
     var clientId = "<%= clientId %>";
     var appId = "<%= appId %>";
-    console.log(clientId);
     var scope = [
         'https://www.googleapis.com/auth/drive'
     ];
@@ -230,6 +242,7 @@
     function handleAuthResult(authResult) {
         if (authResult && !authResult.error) {
             oauthToken = authResult.access_token;
+            console.log(authResult);
             socket.emit("authenticate", authResult);
             createPicker();
         }
@@ -255,16 +268,15 @@
         }
     }
 
-        // callback implementation.
+    // callback implementation.
     function pickerCallback(data) {
         if (data.action == google.picker.Action.PICKED) {
             window.app.folderid = data.docs[0].id;
             socket.emit("upload", window.app.folderid);
         }
     }
-
     function uploadFile(authClient, filename, folderid) {
-        const mydrive = google.drive({version: 'v3', auth: authClient});
+        const mydrive = google.drive({ version: 'v3', auth: authClient });
         const fileMetadata = {
             'name': filename,
             parents: [folderid]
@@ -279,15 +291,13 @@
             fields: 'id'
         }, (err, file) => {
             if (err) {
-            // Handle error
-            console.error(err);
+                // Handle error
+                console.error(err);
             } else {
-            console.log('File uploaded onto Google Drive');
+                console.log('File uploaded onto Google Drive');
             }
         });
     }
-
-
 </script>
 
 
@@ -297,9 +307,9 @@
         data: {
             name: '',
             time: '',
-            my_script_name: '',
+            my_script_name: sessionStorage.script_name,
             record_name: '',
-            my_script: '',
+            my_script: sessionStorage.script_content,
             selected_script: null,
             options: [],
             folderid: '',
@@ -336,6 +346,8 @@
             saveScript(event) {
                 event.preventDefault();
                 socket.emit("save-script", { name: this.my_script_name, data: this.my_script });
+                sessionStorage.script_name = this.my_script_name;
+                sessionStorage.script_content = this.my_script_content;
             },
             getScriptNames(event) {
                 event.preventDefault();
@@ -354,6 +366,8 @@
             },
             runScript(event) {
                 event.preventDefault();
+                sessionStorage.script_name = this.my_script_name;
+                sessionStorage.script_content = this.my_script;
                 socket.emit("run-script", this.my_script_name);
             },
             logout(event) {

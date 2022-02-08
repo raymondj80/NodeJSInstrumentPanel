@@ -22,26 +22,46 @@ class DataReadWrite {
     this.Users = Users;
   }
 
+  /**Setter for class variable time
+   * @param {Number} time the time
+   *
+   */
+  async setTime(time) {
+    this.time = time;
+  }
+
+  /**Reset datapacket
+   * @param {String} dataType streamData or recordData
+   */
+  async resetDatapacket(dataType) {
+    if (dataType === "stream") this.datapacket["stream_data"] = [];
+    else if (dataType === "record") this.datapacket["record_data"] = [];
+    else return -1;
+  }
+
   /**
-   * Emits jsondata class variable from fetchInstrumentData()
-   * and increments time by 1
+   * Adds time key value pair to jsonData and passes to graphs.ejs to render graph
    */
   async updateStreamData() {
-    this.datapacket["stream_data"].push(this.jsonData);
+    const jsonData = this.jsonData;
+    if (jsonData != null) {
+      jsonData["time"] = this.time;
+    }
+    this.datapacket["stream_data"].push(jsonData);
     this.socket.emit("datapacket", this.datapacket["stream_data"]);
     this.time += 1;
   }
 
   /**
-   * Updates the record_data entry of the the datapacket class variable 
-   * and increments time by 1
+   * Adds time key value pair to jsonData and passes to graphs.ejs to render graph
    */
   async updateRecordData() {
+    const jsonData = this.jsonData;
+    jsonData["time"] = this.time;
     this.datapacket["record_data"].push(this.jsonData);
-    this.socket.emit("datapacket", this.datapacket["stream_data"]);
+    this.socket.emit("datapacket", this.datapacket["record_data"]);
     this.time += 1;
   }
-
 
   /**
    * Emits jsonData to update headers in home page
@@ -51,7 +71,7 @@ class DataReadWrite {
   }
 
   /**
-   * Appends jsonData to a new row in the csv file 
+   * Appends jsonData to a new row in the csv file
    * @param {String} filename name of the local csv file to be written to
    * @param {String} foldername name of the folder to be written to
    */
@@ -74,11 +94,10 @@ class DataReadWrite {
       self.fs.appendFileSync(file, rows);
       self.fs.appendFileSync(file, "\r\n");
     }
-    console.log(rows);
   }
 
   /**
-   * Write filedata to a file 
+   * Write filedata to a file
    * @param {String} filename name of the local csv file to be written to
    * @param {String} foldername name of the folder to be written to
    * @param {String} filedata data to be written to a file
@@ -115,7 +134,6 @@ class DataReadWrite {
     for (var i in files) {
       myfiles.push(files[i]);
     }
-    console.log(myfiles);
     return myfiles;
   }
 
@@ -129,7 +147,7 @@ class DataReadWrite {
   }
 
   /**
-   * Fetch the instrument data by spawning a subprocess that runs a python file 
+   * Fetch the instrument data by spawning a subprocess that runs a python file
    * and stores it in the class variable jsonData
    */
   async fetchInstrumentData() {
@@ -141,25 +159,25 @@ class DataReadWrite {
     process.stdout.on("data", function (data) {
       _data = JSON.parse(data.toString());
     });
-    process.on("close", (code) => {
+    process.on("close", () => {
       this.jsonData = _data;
     });
   }
 
   /**
-   * Run a script by running the python file run_script.py which parses the arguments 
+   * Run a script by running the python file run_script.py which parses the arguments
    * of the String script param
    * @param {String} script
    */
   async runScript(script) {
     var self = this;
-    console.log(script);
     const process = this.spawn("python", [
       "-u",
       this.path.join(__dirname, "./python/run_script.py"),
       script,
     ]);
     process.stdout.on("data", function (script_log) {
+      console.log(script_log.toString());
       script = JSON.parse(script_log.toString());
       self.ee.emit("run-script", script);
     });
@@ -176,8 +194,8 @@ class DataReadWrite {
   }
 
   /**
-   * Delete selected script 
-   * @param {String} scriptname 
+   * Delete selected script
+   * @param {String} scriptname
    */
   async deleteScript(scriptname) {
     const scriptPath = this.path.join(__dirname, "../../" + "scripts");
@@ -205,7 +223,6 @@ class DataReadWrite {
    */
   async csvsavetodb(csvFile, csvPath) {
     const csvpath = this.path.join(csvPath, csvFile);
-    console.log(csvpath);
     this.csvtojson()
       .fromFile(csvpath)
       .then((jsonObj) => {
@@ -329,8 +346,8 @@ class DataReadWrite {
   }
 
   /**
-   * Retrieve the user id from UserData model 
-   * @param {String} user_email the users's unique email 
+   * Retrieve the user id from UserData model
+   * @param {String} user_email the users's unique email
    */
   async retrieveUserID(user_email) {
     this.Users.findOne({ email: user_email }).then((res) => {
@@ -340,7 +357,7 @@ class DataReadWrite {
 
   /**
    * Retrieve the user's scripts from mongoDB
-   * @param {String} user_email the users's unique email 
+   * @param {String} user_email the users's unique email
    * @param {String} scriptPath
    */
   async retrieveUserScripts(user_email, scriptPath) {
@@ -364,7 +381,7 @@ class DataReadWrite {
 
   /**
    * Retrieve the user's csv files from mongoDB
-   * @param {String} user_email the users's unique email 
+   * @param {String} user_email the users's unique email
    * @param {String} csvPath
    */
   async retrieveUserCsvs(user_email, csvPath) {
@@ -391,7 +408,7 @@ class DataReadWrite {
 
   /**
    * Retrieve the user's id, scripts, and csv files on login
-   * @param {String} user_email the users's unique email 
+   * @param {String} user_email the users's unique email
    */
   async loadOnLogin(user_email) {
     var self = this;
@@ -433,13 +450,13 @@ class DataReadWrite {
    */
   async authenticate() {
     const TOKEN_PATH = this.path.join(__dirname, process.env.TOKEN_PATH);
-
     this.oauth2Client = new this.google.auth.OAuth2(
       process.env.CLIENT_ID_DRIVE,
       process.env.CLIENT_SECRET,
       process.env.REDIRECT_URL
     );
     this.fs.readFile(TOKEN_PATH, (err, token) => {
+      console.log(JSON.parse(token));
       if (err) return getAccessToken(this.oauth2Client);
       this.oauth2Client.setCredentials(JSON.parse(token));
     });
@@ -462,12 +479,11 @@ class DataReadWrite {
    * @param {String} folderid
    */
   async setFolderId(folderid) {
-    console.log(folderid);
     this.folderid = folderid;
   }
 
   /**
-   * Upload file to google drive 
+   * Upload file to google drive
    * with filename and folderid class variables
    */
   async uploadFile() {
