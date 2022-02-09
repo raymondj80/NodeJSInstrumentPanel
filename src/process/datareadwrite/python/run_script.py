@@ -6,7 +6,6 @@ if sys.platform == 'win32':
     try:
         import win32com.client
         import pythoncom
-        # print("Successfully imported modules")
     except ImportError:
         print("Must import the pywin32 module.  Use:  ")
         print(f"\tconda install -c anaconda pywin32")
@@ -35,7 +34,6 @@ class QDInstrument:
             try: 
                 self._mvu = win32com.client.Dispatch(self._class_id)
             except:
-                instrumentInfo = inputs()
                 print('Client Error. Check if MultiVu is running. \n')
         else:
             raise Exception('This must be running on a Windows machine')
@@ -72,7 +70,7 @@ class Commands(QDInstrument):
     def __init__(self, instrument_type):
         super().__init__(instrument_type)
         self.cmds = []
-        self.state = {'num': -1, 'record': False, 'file': None}
+        self.state = {'num': -1, 'record': False, 'file': None, 'cmd': None}
 
     def parse_sequence(self, seq):
         cmds = seq.split("\n")
@@ -88,25 +86,30 @@ class Commands(QDInstrument):
             # Start record
             if cmd[1] == "START":
                 self.state["record"] = True
+                self.state["cmd"] = "Rec"
                 self.state["file"] = cmd[2]
 
             # Stop record
             elif cmd[1] == "STOP":
                 self.state["record"] = False
+                self.state["cmd"] = "StopRec"
                 self.state["file"] = None
 
             print(json.dumps(self.state))
 
             # Set temperature
             if cmd[1] == "TEMP":
+                self.state["cmd"] = "Temp"
                 self.set_temperature(float(cmd[2]), float(cmd[3]), int(cmd[4]))
 
             # Set field
             elif cmd[1] == "FIELD":
+                self.state["cmd"] = "Field"
                 self.set_field(float(cmd[2]), float(cmd[3]), 0, 0)
             
             # Wait for @params(time, check_temp, check_field)
             elif cmd[1] == "WAITFOR":
+                self.state["cmd"] = "Wait"
                 self.wait_for(float(cmd[2]), int(cmd[3]), int(cmd[4]))
 
             sleep(0.1)
@@ -117,5 +120,6 @@ if __name__ == "__main__":
     myScript.run_sequence()
 
     #run_script end
+    sleep(1)
     myScript.state["num"] = -1
     print(json.dumps(myScript.state))

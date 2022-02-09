@@ -10,18 +10,24 @@ class BController {
     this.file = null;
   }
 
+  // Event emitter to communicate with DataReadWrite class
   async setIOListener() {
     var self = this;
     self.ee.on("run-script", function (log) {
-      if (log["record"]) {
-        self.setState(5, log["file"]);
+      console.log('in run-script loop');
+      if (log["record"] && log["cmd"] == "Rec") { 
+        self.setState(16, log["file"]);
         self.file = log["file"];
       } else if (log["num"] == -1) {
         self.io.emit("stop_script");
         self.setState(8, null);
-      } else self.setState(6, null);
+      } else if (self.state == 5 && !log["record"]) {
+        self.file = null;
+        self.setState(7, null);
+      }
     });
 
+    // socket connection messages to change state
     self.io.on("connection", function (socket) {
       socket.on("logged-in", function (email) {
         self.setState(10, email);
@@ -56,6 +62,9 @@ class BController {
       socket.on("upload", function (folderid) {
         self.setState(14, folderid);
       });
+      socket.on("reset-time", function () {
+        if (self.prev != 5) self.setState(15, null); // if not script recording
+      });
     });
   }
 
@@ -69,48 +78,51 @@ class BController {
   }
 
   async getState() {
+    /* If prev state != current state means that a packet was received 
+      either from the client side socket or event emitter*/
     if (this.prev != this.state) {
       if ((this.prev == 5) & (this.state == 6)) {
         this.io.emit("stop_script_recording", this.file);
         this.state = 7;
         this.file = null;
-      } else if ((this.prev == 4 || this.prev == 6) & (this.state == 5)) {
+      } else if (this.state == 4) {
         this.io.emit("script_recording", this.file);
       } else if ((this.prev == 9) & (this.state == 8)) {
         this.cnt = 0;
       }
-    } else {
-      // if recording continue recording
+      //Spencer test 1/28/22: if goes from script recording to stop recording, try to stop script. Update: it worked.
+      //...but there was a "GaxiosError: Login Required"
+      // else if ((this.prev == 5) & (this.state == 7)) {
+      //   this.state = 8;
+       }
+     else {
+      /* If prev state == current state means we've already run the process once
+    and may want to transition to a different state */
       if (this.state == 9 && this.cnt == this.time) {
+        //if script recording, and time reached, end recording
         this.state = 8;
         this.time = null;
         this.cnt = 1;
         this.io.emit("finished_recording");
       } else if (this.state == 9) {
+        // if script recording, continue recording
         this.state = 9;
         this.cnt += 1;
-      }
-      // else if (this.state == -1) this.state = -1;
-      // else if (this.state == 5) this.state = 5;
-      // else if (this.state == 6) this.state = 6;
-      else if (this.state == 7) this.state = 6;
+      } // if finished recording or started script, go to running script
+      else if (this.state == 4 || this.state == 7) this.state = 6;
+      // if saving user session go to logged out
       else if (this.state == 11) this.state = -1;
+      // if deleting script go to fetch script names
       else if (this.state == 12) this.state = 2;
-      else if (
-        this.state == 10 ||
-        this.state == 1 ||
-        this.state == 2 ||
-        this.state == 3 ||
-        this.state == 8 ||
-        this.state == 13 ||
-        this.state == 14
-      )
-        this.state = 0;
-      // else {
-      //   this.state = 0;
-      //   this.data = null;
-      // }
+      // if script recording continue recording
+      else if (this.state == 5) this.state = 5;
+      // if script running continue running
+      else if (this.state == 6) this.state = 6;      
+      // if started script recording continue to script recording
+      else if (this.state == 16) this.state = 5;
+      else this.state = 0; // default idle state
     }
+    if (this.state == 5) this.data = this.file;
     this.prev = this.state;
     return [this.state, this.data];
   }

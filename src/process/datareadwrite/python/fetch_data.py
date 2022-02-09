@@ -100,10 +100,10 @@ LI2 = SR860("140.247.189.96")
 try:
     LI1 = SR860(TCPIP1)
     lockin_json1 = {
-        "Vx1": LI1.vx,
-        "Vy1": LI1.vy,
-        "freq1": LI1.frequency,
-        "theta1": LI1.theta
+        "Vx1": float(LI1.vx),
+        "Vy1": float(LI1.vy),
+        "freq1": float(LI1.frequency),
+        "theta1": float(LI1.theta)
     }
     LI1.close()
 

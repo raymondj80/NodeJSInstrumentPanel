@@ -3,10 +3,9 @@ const fs = require("fs");
 const { Parser } = require("json2csv");
 const csvtojson = require("csvtojson");
 const { google } = require("googleapis");
-
 var { spawn } = require("child_process");
 const Users = require("../models/User.js");
-const Data = require("./datareadwrite/readwrite");
+const DataReadWrite = require("./datareadwrite/readwrite");
 const Controller = require("./bcontroller.js");
 
 var EventEmitter = require("events").EventEmitter;
@@ -16,7 +15,7 @@ var data;
 var controller;
 
 module.exports = function (io) {
-  data = new Data({
+  data = new DataReadWrite({
     io,
     ee,
     path,
@@ -36,6 +35,7 @@ async function backgroundLogic([state, packet]) {
     console.log("logged out");
     return;
   } else if (state === 0) {
+    data.updateStreamData();
     console.log("idle state");
   } else if (state === 1) {
     console.log("save script");
@@ -56,15 +56,22 @@ async function backgroundLogic([state, packet]) {
     filename = packet;
     let script = await data.getFileContent(filename, "scripts");
     data.runScript(script);
+    data.resetDatapacket("record");
+    data.setTime(0);
     data.emitMessage("start_script");
   } else if (state === 5) {
     console.log("script recording");
     filename = packet;
+    data.updateRecordData();
     data.writeToCSV(filename, "csv");
   } else if (state === 6) {
     console.log("running script");
+    data.updateStreamData();
   } else if (state === 7) {
     console.log("stop recording");
+    data.resetDatapacket("record");
+    data.resetDatapacket("stream");
+    data.setTime(0);
   } else if (state === 8) {
     console.log("finished script");
     data.uploadFile();
@@ -88,6 +95,17 @@ async function backgroundLogic([state, packet]) {
   } else if (state == 14) {
     console.log("set folder id");
     data.setFolderId(packet);
+  } else if (state == 15) {
+    console.log("reset time");
+    data.resetDatapacket("stream");
+    data.setTime(0);
+  } else if (state == 16) {
+    console.log("start recording");
+    filename = packet;
+    data.writeToCSV(filename, "csv");
+    data.resetDatapacket("record");
+    data.resetDatapacket("stream");
+    data.setTime(0);
   }
 
   data
